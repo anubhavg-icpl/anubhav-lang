@@ -15,6 +15,12 @@ pub enum Token {
     Slash,
     LeftParen,
     RightParen,
+    Equal,
+    NotEqual,
+    Less,
+    Greater,
+    LessEqual,
+    GreaterEqual,
     EOF,
 }
 
@@ -127,6 +133,42 @@ impl Lexer {
             Some('/') => {
                 self.advance();
                 Token::Slash
+            }
+            Some('=') => {
+                self.advance();
+                if self.current_char == Some('=') {
+                    self.advance();
+                    Token::Equal
+                } else {
+                    Token::Equal
+                }
+            }
+            Some('!') => {
+                self.advance();
+                if self.current_char == Some('=') {
+                    self.advance();
+                    Token::NotEqual
+                } else {
+                    self.next_token()
+                }
+            }
+            Some('<') => {
+                self.advance();
+                if self.current_char == Some('=') {
+                    self.advance();
+                    Token::LessEqual
+                } else {
+                    Token::Less
+                }
+            }
+            Some('>') => {
+                self.advance();
+                if self.current_char == Some('=') {
+                    self.advance();
+                    Token::GreaterEqual
+                } else {
+                    Token::Greater
+                }
             }
             Some('(') => {
                 self.advance();

@@ -156,9 +156,29 @@ impl Parser {
     }
 
     fn parse_term(&mut self) -> Result<Expression, String> {
-        let mut left = self.parse_factor()?;
+        let mut left = self.parse_comparison()?;
         
         while matches!(self.current_token, Token::Plus | Token::Minus) {
+            let operator = self.current_token.clone();
+            self.advance();
+            let right = self.parse_comparison()?;
+            left = Expression::BinaryOp {
+                left: Box::new(left),
+                operator,
+                right: Box::new(right),
+            };
+        }
+        
+        Ok(left)
+    }
+
+    fn parse_comparison(&mut self) -> Result<Expression, String> {
+        let mut left = self.parse_factor()?;
+        
+        while matches!(self.current_token, 
+            Token::Equal | Token::NotEqual | 
+            Token::Less | Token::Greater | 
+            Token::LessEqual | Token::GreaterEqual) {
             let operator = self.current_token.clone();
             self.advance();
             let right = self.parse_factor()?;

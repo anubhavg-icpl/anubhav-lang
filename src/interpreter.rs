@@ -77,6 +77,12 @@ impl Interpreter {
                             Ok(left_val / right_val)
                         }
                     }
+                    Token::Equal => Ok(if left_val == right_val { 1.0 } else { 0.0 }),
+                    Token::NotEqual => Ok(if left_val != right_val { 1.0 } else { 0.0 }),
+                    Token::Less => Ok(if left_val < right_val { 1.0 } else { 0.0 }),
+                    Token::Greater => Ok(if left_val > right_val { 1.0 } else { 0.0 }),
+                    Token::LessEqual => Ok(if left_val <= right_val { 1.0 } else { 0.0 }),
+                    Token::GreaterEqual => Ok(if left_val >= right_val { 1.0 } else { 0.0 }),
                     _ => Err(format!("Invalid operator: {:?}", operator))
                 }
             }

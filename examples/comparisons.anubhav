@@ -1,0 +1,15 @@
+# Comparison operators
+STORE x 10
+STORE y 20
+
+CALCULATE is_equal RECALL x == RECALL y
+CALCULATE is_less RECALL x < RECALL y
+CALCULATE is_greater RECALL x > RECALL y
+
+MANIFEST is_equal
+MANIFEST is_less
+MANIFEST is_greater
+
+# Complex comparison
+CALCULATE check (RECALL x + 10) == RECALL y
+MANIFEST check
