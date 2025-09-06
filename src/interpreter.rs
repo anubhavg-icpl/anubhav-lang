@@ -1,6 +1,7 @@
 use std::collections::HashMap;
-use crate::parser::{Statement, Expression};
-use crate::lexer::Token;
+use std::fs;
+use crate::parser::{Statement, Expression, Parser};
+use crate::lexer::{Token, Lexer};
 
 pub struct Interpreter {
     intents: HashMap<String, String>,
@@ -75,7 +76,12 @@ impl Interpreter {
                 Statement::Repeat { count, body } => {
                     let times = self.evaluate_expression(&count)? as usize;
                     for _ in 0..times {
-                        self.execute(body.clone())?;
+                        match self.execute(body.clone()) {
+                            Err(e) if e == "BREAK" => break,
+                            Err(e) if e == "CONTINUE" => continue,
+                            Err(e) => return Err(e),
+                            Ok(_) => {}
+                        }
                     }
                 }
                 Statement::If { condition, then_body, else_body } => {
@@ -109,7 +115,12 @@ impl Interpreter {
                 }
                 Statement::While { condition, body } => {
                     while self.evaluate_expression(&condition)? != 0.0 {
-                        self.execute(body.clone())?;
+                        match self.execute(body.clone()) {
+                            Err(e) if e == "BREAK" => break,
+                            Err(e) if e == "CONTINUE" => continue,
+                            Err(e) => return Err(e),
+                            Ok(_) => {}
+                        }
                     }
                 }
                 Statement::Increment { variable } => {
@@ -139,13 +150,23 @@ impl Interpreter {
                     if step_val > 0.0 {
                         while current <= end_val {
                             self.variables.insert(variable.clone(), current);
-                            self.execute(body.clone())?;
+                            match self.execute(body.clone()) {
+                                Err(e) if e == "BREAK" => break,
+                                Err(e) if e == "CONTINUE" => {},
+                                Err(e) => return Err(e),
+                                Ok(_) => {}
+                            }
                             current += step_val;
                         }
                     } else if step_val < 0.0 {
                         while current >= end_val {
                             self.variables.insert(variable.clone(), current);
-                            self.execute(body.clone())?;
+                            match self.execute(body.clone()) {
+                                Err(e) if e == "BREAK" => break,
+                                Err(e) if e == "CONTINUE" => {},
+                                Err(e) => return Err(e),
+                                Ok(_) => {}
+                            }
                             current += step_val;
                         }
                     }
@@ -255,6 +276,51 @@ impl Interpreter {
                     } else {
                         return Err(format!("Array '{}' not found", array_name));
                     }
+                }
+                Statement::Import { filename } => {
+                    // Read and execute the imported file
+                    let content = fs::read_to_string(&filename)
+                        .map_err(|e| format!("Failed to read file '{}': {}", filename, e))?;
+                    
+                    let lexer = Lexer::new(content);
+                    let mut parser = Parser::new(lexer);
+                    let imported_statements = parser.parse()
+                        .map_err(|e| format!("Parse error in '{}': {}", filename, e))?;
+                    
+                    // Execute the imported statements
+                    self.execute(imported_statements)?;
+                }
+                Statement::Export { items, filename } => {
+                    // Create export data
+                    let mut export_content = String::new();
+                    export_content.push_str("# Exported from Anubhav\n");
+                    
+                    for item in &items {
+                        if let Some(intent_value) = self.intents.get(item) {
+                            export_content.push_str(&format!("INTENT {} \"{}\"\n", item, intent_value));
+                        } else if let Some(calc_value) = self.calculations.get(item) {
+                            export_content.push_str(&format!("STORE {} {}\n", item, calc_value));
+                        } else if let Some(var_value) = self.variables.get(item) {
+                            export_content.push_str(&format!("STORE {} {}\n", item, var_value));
+                        } else if let Some(array_value) = self.arrays.get(item) {
+                            export_content.push_str(&format!("ARRAY {}\n", item));
+                            for value in array_value {
+                                export_content.push_str(&format!("PUSH {} {}\n", item, value));
+                            }
+                        }
+                    }
+                    
+                    // Write to file
+                    fs::write(&filename, export_content)
+                        .map_err(|e| format!("Failed to write to file '{}': {}", filename, e))?;
+                    
+                    println!("Exported {} items to {}", items.len(), filename);
+                }
+                Statement::Break => {
+                    return Err("BREAK".to_string()); // Special error code for break
+                }
+                Statement::Continue => {
+                    return Err("CONTINUE".to_string()); // Special error code for continue
                 }
             }
         }

@@ -101,6 +101,15 @@ pub enum Statement {
         index: Expression,
         value: Expression,
     },
+    Import {
+        filename: String,
+    },
+    Export {
+        items: Vec<String>,
+        filename: String,
+    },
+    Break,
+    Continue,
 }
 
 pub struct Parser {
@@ -188,6 +197,20 @@ impl Parser {
                 }
                 Token::Set => {
                     statements.push(self.parse_array_set()?);
+                }
+                Token::Import => {
+                    statements.push(self.parse_import()?);
+                }
+                Token::Export => {
+                    statements.push(self.parse_export()?);
+                }
+                Token::Break => {
+                    self.advance();
+                    statements.push(Statement::Break);
+                }
+                Token::Continue => {
+                    self.advance();
+                    statements.push(Statement::Continue);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -333,6 +356,14 @@ impl Parser {
                 Token::Store => body.push(self.parse_store()?),
                 Token::Combine => body.push(self.parse_combine()?),
                 Token::Print => body.push(self.parse_print()?),
+                Token::Break => {
+                    self.advance();
+                    body.push(Statement::Break);
+                },
+                Token::Continue => {
+                    self.advance();
+                    body.push(Statement::Continue);
+                },
                 _ => {
                     return Err(format!("Unexpected token in repeat body: {:?}", self.current_token));
                 }
@@ -367,6 +398,14 @@ impl Parser {
                 Token::Store => then_body.push(self.parse_store()?),
                 Token::Combine => then_body.push(self.parse_combine()?),
                 Token::Print => then_body.push(self.parse_print()?),
+                Token::Break => {
+                    self.advance();
+                    then_body.push(Statement::Break);
+                },
+                Token::Continue => {
+                    self.advance();
+                    then_body.push(Statement::Continue);
+                },
                 _ => {
                     return Err(format!("Unexpected token in IF body: {:?}", self.current_token));
                 }
@@ -386,6 +425,14 @@ impl Parser {
                     Token::Combine => else_stmts.push(self.parse_combine()?),
                     Token::If => else_stmts.push(self.parse_if()?),
                     Token::Print => else_stmts.push(self.parse_print()?),
+                    Token::Break => {
+                        self.advance();
+                        else_stmts.push(Statement::Break);
+                    },
+                    Token::Continue => {
+                        self.advance();
+                        else_stmts.push(Statement::Continue);
+                    },
                     _ => {
                         return Err(format!("Unexpected token in ELSE body: {:?}", self.current_token));
                     }
@@ -454,6 +501,14 @@ impl Parser {
                 Token::If => body.push(self.parse_if()?),
                 Token::Increment => body.push(self.parse_increment()?),
                 Token::Decrement => body.push(self.parse_decrement()?),
+                Token::Break => {
+                    self.advance();
+                    body.push(Statement::Break);
+                },
+                Token::Continue => {
+                    self.advance();
+                    body.push(Statement::Continue);
+                },
                 _ => {
                     return Err(format!("Unexpected token in WHILE body: {:?}", self.current_token));
                 }
@@ -544,6 +599,14 @@ impl Parser {
                 Token::Pop => body.push(self.parse_array_pop()?),
                 Token::Get => body.push(self.parse_array_get()?),
                 Token::Set => body.push(self.parse_array_set()?),
+                Token::Break => {
+                    self.advance();
+                    body.push(Statement::Break);
+                },
+                Token::Continue => {
+                    self.advance();
+                    body.push(Statement::Continue);
+                },
                 _ => {
                     return Err(format!("Unexpected token in FOR body: {:?}", self.current_token));
                 }
@@ -856,6 +919,46 @@ impl Parser {
         let value = self.parse_expression()?;
         
         Ok(Statement::ArraySet { array_name, index, value })
+    }
+    
+    fn parse_import(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip IMPORT
+        
+        let filename = if let Token::StringLiteral(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err("Expected filename string after IMPORT".to_string());
+        };
+        self.advance();
+        
+        Ok(Statement::Import { filename })
+    }
+    
+    fn parse_export(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip EXPORT
+        
+        let mut items = Vec::new();
+        
+        // Parse list of identifiers to export
+        while matches!(self.current_token, Token::Identifier(_)) {
+            if let Token::Identifier(item) = &self.current_token {
+                items.push(item.clone());
+            }
+            self.advance();
+        }
+        
+        if items.is_empty() {
+            return Err("Expected items to export".to_string());
+        }
+        
+        let filename = if let Token::StringLiteral(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err("Expected filename string after EXPORT items".to_string());
+        };
+        self.advance();
+        
+        Ok(Statement::Export { items, filename })
     }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {

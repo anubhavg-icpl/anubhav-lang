@@ -1,0 +1,42 @@
+# IMPORT/EXPORT module system test
+PRINT "Testing IMPORT/EXPORT functionality"
+
+# Create some data to export
+INTENT greeting "Hello from Anubhav!"
+STORE pi 3.14159
+CALCULATE squared_pi RECALL pi * RECALL pi
+
+ARRAY numbers
+PUSH numbers 10
+PUSH numbers 20
+PUSH numbers 30
+
+# Export the data
+PRINT "Exporting data..."
+EXPORT greeting pi squared_pi numbers "exported_data.anubhav"
+
+# Clear current state by creating new variables
+INTENT greeting "This will be overwritten"
+STORE pi 0
+STORE squared_pi 0
+
+# Import the data back
+PRINT "Importing data..."
+IMPORT "exported_data.anubhav"
+
+# Verify the imported data
+MANIFEST greeting
+PRINT "Imported pi:" pi
+PRINT "Imported squared_pi:" squared_pi
+
+# Test array import
+GET numbers 0 first_num
+GET numbers 1 second_num
+GET numbers 2 third_num
+
+PRINT "Imported array values:"
+PRINT "numbers[0]:" first_num
+PRINT "numbers[1]:" second_num  
+PRINT "numbers[2]:" third_num
+
+PRINT "Module system test completed!"

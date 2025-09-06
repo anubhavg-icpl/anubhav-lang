@@ -44,6 +44,10 @@ pub enum Token {
     Size,
     Get,
     Set,
+    Import,
+    Export,
+    Break,
+    Continue,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -284,6 +288,10 @@ impl Lexer {
                     "SIZE" => Token::Size,
                     "GET" => Token::Get,
                     "SET" => Token::Set,
+                    "IMPORT" => Token::Import,
+                    "EXPORT" => Token::Export,
+                    "BREAK" => Token::Break,
+                    "CONTINUE" => Token::Continue,
                     _ => Token::Identifier(identifier),
                 }
             }

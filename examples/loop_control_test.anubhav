@@ -1,0 +1,48 @@
+# Testing BREAK and CONTINUE statements
+PRINT "Testing loop control statements"
+
+# Test BREAK in FOR loop
+PRINT "=== FOR loop with BREAK ==="
+FOR i 1 TO 10 DO
+    IF RECALL i == 5 THEN
+        PRINT "Breaking at i=" i
+        BREAK
+    END
+    PRINT "i=" i
+END
+
+# Test CONTINUE in FOR loop
+PRINT "=== FOR loop with CONTINUE ==="
+FOR i 1 TO 5 DO
+    IF RECALL i == 3 THEN
+        PRINT "Skipping i=" i
+        CONTINUE
+    END
+    PRINT "Processing i=" i
+END
+
+# Test BREAK in WHILE loop
+PRINT "=== WHILE loop with BREAK ==="
+STORE counter 1
+WHILE RECALL counter <= 10 DO
+    IF RECALL counter == 4 THEN
+        PRINT "Breaking at counter=" counter
+        BREAK
+    END
+    PRINT "counter=" counter
+    INCREMENT counter
+END
+
+# Test CONTINUE in WHILE loop
+PRINT "=== WHILE loop with CONTINUE ==="
+STORE counter 0
+WHILE RECALL counter < 5 DO
+    INCREMENT counter
+    IF RECALL counter == 3 THEN
+        PRINT "Skipping counter=" counter
+        CONTINUE
+    END
+    PRINT "Processing counter=" counter
+END
+
+PRINT "Loop control test completed!"

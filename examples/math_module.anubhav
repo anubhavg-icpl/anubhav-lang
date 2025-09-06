@@ -1,0 +1,9 @@
+# Math utility module
+INTENT module_name "Math Utilities"
+STORE e 2.71828
+STORE golden_ratio 1.618
+
+CALCULATE circle_area 3.14159 * 5 * 5
+INTENT circle_description "Area of circle with radius 5"
+
+PRINT "Math module loaded successfully"
