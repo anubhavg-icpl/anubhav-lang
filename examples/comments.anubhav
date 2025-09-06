@@ -1,0 +1,9 @@
+# This is a comment explaining the program
+# Comments start with # and go to end of line
+
+INTENT greeting "Hello from Anubhav!" # This is an intent
+MANIFEST greeting
+
+# Now let's do some math
+CALCULATE answer 21 * 2 # The answer to everything
+MANIFEST answer

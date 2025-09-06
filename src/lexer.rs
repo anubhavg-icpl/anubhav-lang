@@ -44,6 +44,15 @@ impl Lexer {
         while let Some(ch) = self.current_char {
             if ch.is_whitespace() {
                 self.advance();
+            } else if ch == '#' {
+                // Skip comment line
+                while let Some(c) = self.current_char {
+                    if c == '\n' {
+                        self.advance();
+                        break;
+                    }
+                    self.advance();
+                }
             } else {
                 break;
             }
