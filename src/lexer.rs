@@ -48,6 +48,9 @@ pub enum Token {
     Export,
     Break,
     Continue,
+    Function,
+    Call,
+    Return,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -292,6 +295,9 @@ impl Lexer {
                     "EXPORT" => Token::Export,
                     "BREAK" => Token::Break,
                     "CONTINUE" => Token::Continue,
+                    "FUNCTION" => Token::Function,
+                    "CALL" => Token::Call,
+                    "RETURN" => Token::Return,
                     _ => Token::Identifier(identifier),
                 }
             }

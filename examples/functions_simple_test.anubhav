@@ -1,0 +1,33 @@
+# Testing FUNCTION definition and CALL statements
+PRINT "Testing function functionality"
+
+# Simple function without parameters
+FUNCTION greet DO
+    PRINT "Hello from function!"
+END
+
+PRINT "=== Calling function without parameters ==="
+CALL greet
+
+# Function with one parameter
+FUNCTION square(x) DO  
+    CALCULATE result RECALL x * RECALL x
+    RETURN RECALL result
+END
+
+PRINT "=== Calling function with one parameter ==="
+CALL square(5) square_result
+PRINT "5 squared =" square_result
+
+# Function with local variables
+FUNCTION calculate_circle_area(radius) DO
+    STORE pi 3.14159
+    CALCULATE area RECALL pi * RECALL radius * RECALL radius
+    PRINT "Calculating area for radius:" radius
+    RETURN RECALL area
+END
+
+CALL calculate_circle_area(3) circle_area
+PRINT "Circle area:" circle_area
+
+PRINT "Function test completed!"

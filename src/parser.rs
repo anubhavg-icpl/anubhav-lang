@@ -110,6 +110,19 @@ pub enum Statement {
     },
     Break,
     Continue,
+    FunctionDefinition {
+        name: String,
+        parameters: Vec<String>,
+        body: Vec<Statement>,
+    },
+    FunctionCall {
+        function_name: String,
+        arguments: Vec<Expression>,
+        result_name: Option<String>,
+    },
+    Return {
+        value: Option<Expression>,
+    },
 }
 
 pub struct Parser {
@@ -211,6 +224,15 @@ impl Parser {
                 Token::Continue => {
                     self.advance();
                     statements.push(Statement::Continue);
+                }
+                Token::Function => {
+                    statements.push(self.parse_function_definition()?);
+                }
+                Token::Call => {
+                    statements.push(self.parse_function_call()?);
+                }
+                Token::Return => {
+                    statements.push(self.parse_return()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -406,6 +428,7 @@ impl Parser {
                     self.advance();
                     then_body.push(Statement::Continue);
                 },
+                Token::Return => then_body.push(self.parse_return()?),
                 _ => {
                     return Err(format!("Unexpected token in IF body: {:?}", self.current_token));
                 }
@@ -433,6 +456,7 @@ impl Parser {
                         self.advance();
                         else_stmts.push(Statement::Continue);
                     },
+                    Token::Return => else_stmts.push(self.parse_return()?),
                     _ => {
                         return Err(format!("Unexpected token in ELSE body: {:?}", self.current_token));
                     }
@@ -1206,5 +1230,136 @@ impl Parser {
             }
             _ => Err(format!("Unexpected token in expression: {:?}", self.current_token))
         }
+    }
+
+    fn parse_function_definition(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip FUNCTION
+        
+        let function_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected function name after FUNCTION"));
+        };
+        self.advance();
+        
+        let mut parameters = Vec::new();
+        
+        // Parse optional parameters
+        if self.current_token == Token::LeftParen {
+            self.advance(); // Skip (
+            
+            while self.current_token != Token::RightParen && self.current_token != Token::EOF {
+                if let Token::Identifier(param_name) = &self.current_token {
+                    parameters.push(param_name.clone());
+                    self.advance();
+                    
+                    // Skip comma if present
+                    if self.current_token == Token::Plus { // Using + as comma separator
+                        self.advance();
+                    }
+                } else {
+                    return Err(format!("Expected parameter name"));
+                }
+            }
+            
+            if self.current_token != Token::RightParen {
+                return Err(format!("Expected ) after function parameters"));
+            }
+            self.advance(); // Skip )
+        }
+        
+        if self.current_token != Token::Do {
+            return Err(format!("Expected DO after function signature"));
+        }
+        self.advance(); // Skip DO
+        
+        let mut body = Vec::new();
+        
+        while self.current_token != Token::End && self.current_token != Token::EOF {
+            match self.current_token {
+                Token::Intent => body.push(self.parse_intent_declaration()?),
+                Token::Manifest => body.push(self.parse_manifest_call()?),
+                Token::Calculate => body.push(self.parse_calculate()?),
+                Token::Store => body.push(self.parse_store()?),
+                Token::Print => body.push(self.parse_print()?),
+                Token::If => body.push(self.parse_if()?),
+                Token::While => body.push(self.parse_while()?),
+                Token::For => body.push(self.parse_for()?),
+                Token::Return => body.push(self.parse_return()?),
+                Token::Call => body.push(self.parse_function_call()?),
+                _ => {
+                    return Err(format!("Unexpected token in function body: {:?}", self.current_token));
+                }
+            }
+        }
+        
+        if self.current_token != Token::End {
+            return Err(format!("Expected END to close FUNCTION"));
+        }
+        self.advance(); // Skip END
+        
+        Ok(Statement::FunctionDefinition { 
+            name: function_name, 
+            parameters, 
+            body 
+        })
+    }
+
+    fn parse_function_call(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip CALL
+        
+        let function_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected function name after CALL"));
+        };
+        self.advance();
+        
+        let mut arguments = Vec::new();
+        let mut result_name = None;
+        
+        // Parse optional arguments
+        if self.current_token == Token::LeftParen {
+            self.advance(); // Skip (
+            
+            while self.current_token != Token::RightParen && self.current_token != Token::EOF {
+                arguments.push(self.parse_expression()?);
+                
+                // Skip comma if present
+                if self.current_token == Token::Plus { // Using + as comma separator
+                    self.advance();
+                }
+            }
+            
+            if self.current_token != Token::RightParen {
+                return Err(format!("Expected ) after function arguments"));
+            }
+            self.advance(); // Skip )
+        }
+        
+        // Check for result variable (INTO identifier)
+        if let Token::Identifier(var_name) = &self.current_token {
+            result_name = Some(var_name.clone());
+            self.advance();
+        }
+        
+        Ok(Statement::FunctionCall { 
+            function_name, 
+            arguments, 
+            result_name 
+        })
+    }
+
+    fn parse_return(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip RETURN
+        
+        let value = if self.current_token == Token::EOF 
+            || self.current_token == Token::End {
+            None
+        } else {
+            Some(self.parse_expression()?)
+        };
+        
+        Ok(Statement::Return { value })
     }
 }

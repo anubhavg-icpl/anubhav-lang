@@ -8,6 +8,8 @@ pub struct Interpreter {
     calculations: HashMap<String, f64>,
     variables: HashMap<String, f64>,
     arrays: HashMap<String, Vec<f64>>,
+    functions: HashMap<String, (Vec<String>, Vec<Statement>)>, // name -> (parameters, body)
+    call_stack: Vec<HashMap<String, f64>>, // Stack of local variable scopes
     random_seed: u64,
 }
 
@@ -18,6 +20,8 @@ impl Interpreter {
             calculations: HashMap::new(),
             variables: HashMap::new(),
             arrays: HashMap::new(),
+            functions: HashMap::new(),
+            call_stack: Vec::new(),
             random_seed: 12345, // Initial seed
         }
     }
@@ -322,6 +326,66 @@ impl Interpreter {
                 Statement::Continue => {
                     return Err("CONTINUE".to_string()); // Special error code for continue
                 }
+                Statement::FunctionDefinition { name, parameters, body } => {
+                    self.functions.insert(name.clone(), (parameters.clone(), body.clone()));
+                    println!("Function '{}' defined with {} parameters", name, parameters.len());
+                }
+                Statement::FunctionCall { function_name, arguments, result_name } => {
+                    if let Some((params, func_body)) = self.functions.get(&function_name).cloned() {
+                        // Evaluate arguments
+                        let mut arg_values = Vec::new();
+                        for arg in &arguments {
+                            arg_values.push(self.evaluate_expression(arg)?);
+                        }
+                        
+                        // Check parameter count
+                        if arg_values.len() != params.len() {
+                            return Err(format!("Function '{}' expects {} parameters, got {}", 
+                                function_name, params.len(), arg_values.len()));
+                        }
+                        
+                        // Create new local scope
+                        let mut local_vars = HashMap::new();
+                        for (i, param) in params.iter().enumerate() {
+                            local_vars.insert(param.clone(), arg_values[i]);
+                        }
+                        self.call_stack.push(local_vars);
+                        
+                        // Execute function body
+                        let mut return_value = 0.0;
+                        match self.execute(func_body) {
+                            Ok(_) => {},
+                            Err(e) if e.starts_with("RETURN:") => {
+                                // Extract return value
+                                if let Ok(val) = e[7..].parse::<f64>() {
+                                    return_value = val;
+                                }
+                            },
+                            Err(e) => {
+                                self.call_stack.pop();
+                                return Err(e);
+                            }
+                        }
+                        
+                        // Pop local scope
+                        self.call_stack.pop();
+                        
+                        // Store result if specified
+                        if let Some(result_var) = result_name {
+                            self.variables.insert(result_var.clone(), return_value);
+                        }
+                    } else {
+                        return Err(format!("Function '{}' not found", function_name));
+                    }
+                }
+                Statement::Return { value } => {
+                    let return_val = if let Some(expr) = value {
+                        self.evaluate_expression(&expr)?
+                    } else {
+                        0.0
+                    };
+                    return Err(format!("RETURN:{}", return_val)); // Special error code for return
+                }
             }
         }
         Ok(())
@@ -338,6 +402,14 @@ impl Interpreter {
         match expr {
             Expression::Number(n) => Ok(*n),
             Expression::Recall(name) => {
+                // Check local scopes first (most recent first)
+                if let Some(local_scope) = self.call_stack.last() {
+                    if let Some(value) = local_scope.get(name) {
+                        return Ok(*value);
+                    }
+                }
+                
+                // Fall back to global scope
                 self.variables.get(name)
                     .or_else(|| self.calculations.get(name))
                     .copied()

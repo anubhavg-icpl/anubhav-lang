@@ -1,0 +1,47 @@
+# Testing FUNCTION definition and CALL statements
+PRINT "Testing function functionality"
+
+# Simple function without parameters
+FUNCTION greet DO
+    PRINT "Hello from function!"
+END
+
+PRINT "=== Calling function without parameters ==="
+CALL greet
+
+# Function with parameters
+FUNCTION add(x + y) DO  
+    STORE result RECALL x + RECALL y
+    RETURN RECALL result
+END
+
+PRINT "=== Calling function with parameters ==="
+CALL add(5 + 3) sum_result
+PRINT "5 + 3 =" sum_result
+
+# Function with multiple operations
+FUNCTION calculate_area(width + height) DO
+    STORE area RECALL width * RECALL height
+    PRINT "Area calculation: width=" width "height=" height
+    RETURN RECALL area
+END
+
+CALL calculate_area(10 + 5) area_result
+PRINT "Area result:" area_result
+
+# Recursive function example (factorial)
+FUNCTION factorial(n) DO
+    IF RECALL n <= 1 THEN
+        RETURN 1
+    END
+    CALCULATE n_minus_1 RECALL n - 1
+    CALL factorial(RECALL n_minus_1) sub_result
+    CALCULATE final_result RECALL n * RECALL sub_result
+    RETURN RECALL final_result
+END
+
+PRINT "=== Testing factorial function ==="
+CALL factorial(5) fact_result
+PRINT "5! =" fact_result
+
+PRINT "Function test completed!"
