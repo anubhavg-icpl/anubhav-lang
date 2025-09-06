@@ -29,15 +29,6 @@ impl Parser {
         self.current_token = self.lexer.next_token();
     }
 
-    fn expect_token(&mut self, expected: Token) -> Result<(), String> {
-        if self.current_token == expected {
-            self.advance();
-            Ok(())
-        } else {
-            Err(format!("Expected {:?}, got {:?}", expected, self.current_token))
-        }
-    }
-
     pub fn parse(&mut self) -> Result<Vec<Statement>, String> {
         let mut statements = Vec::new();
         
