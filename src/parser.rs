@@ -614,6 +614,29 @@ impl Parser {
                 self.advance();
                 Ok(Expression::Number(num))
             }
+            Token::Min | Token::Max => {
+                let op = self.current_token.clone();
+                self.advance();
+                
+                if self.current_token != Token::LeftParen {
+                    return Err(format!("Expected ( after {:?}", op));
+                }
+                self.advance();
+                
+                let first_arg = self.parse_primary()?;
+                let second_arg = self.parse_primary()?;
+                
+                if self.current_token != Token::RightParen {
+                    return Err(format!("Expected ) after MIN/MAX arguments"));
+                }
+                self.advance();
+                
+                Ok(Expression::BinaryOp {
+                    left: Box::new(first_arg),
+                    operator: op,
+                    right: Box::new(second_arg),
+                })
+            }
             Token::Recall => {
                 self.advance(); // Skip RECALL
                 if let Token::Identifier(name) = &self.current_token {

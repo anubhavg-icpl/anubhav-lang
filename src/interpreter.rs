@@ -195,6 +195,8 @@ impl Interpreter {
                         // NOT is a unary operator, right_val contains the operand
                         Ok(if right_val == 0.0 { 1.0 } else { 0.0 })
                     }
+                    Token::Min => Ok(left_val.min(right_val)),
+                    Token::Max => Ok(left_val.max(right_val)),
                     _ => Err(format!("Invalid operator: {:?}", operator))
                 }
             }

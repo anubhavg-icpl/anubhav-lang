@@ -21,6 +21,8 @@ pub enum Token {
     For,
     To,
     Step,
+    Min,
+    Max,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -238,6 +240,8 @@ impl Lexer {
                     "FOR" => Token::For,
                     "TO" => Token::To,
                     "STEP" => Token::Step,
+                    "MIN" => Token::Min,
+                    "MAX" => Token::Max,
                     _ => Token::Identifier(identifier),
                 }
             }

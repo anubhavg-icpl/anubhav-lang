@@ -1,0 +1,28 @@
+# MIN and MAX function examples
+STORE a 10
+STORE b 25
+
+CALCULATE minimum MIN(RECALL a RECALL b)
+CALCULATE maximum MAX(RECALL a RECALL b)
+
+PRINT "MIN(10, 25) =" minimum
+PRINT "MAX(10, 25) =" maximum
+
+# Using MIN/MAX in calculations
+CALCULATE result1 MIN(5 3) + MAX(2 8)
+PRINT "MIN(5,3) + MAX(2,8) =" result1
+
+# Finding bounds
+STORE x 15
+STORE lower 10
+STORE upper 20
+
+# Clamp x between lower and upper
+CALCULATE clamped MIN(MAX(RECALL x RECALL lower) RECALL upper)
+PRINT "Value" x "clamped to [10,20] =" clamped
+
+# Test with negative numbers
+CALCULATE min_neg MIN(-5 -10)
+CALCULATE max_neg MAX(-5 -10)
+PRINT "MIN(-5, -10) =" min_neg
+PRINT "MAX(-5, -10) =" max_neg
