@@ -1,12 +1,11 @@
 // Extension implementations for the interpreter
-use crate::interpreter::Interpreter;
-use crate::parser::Statement;
+use super::interpreter::Interpreter;
+use crate::lang::parser::Statement;
 use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Write};
 use std::thread;
 use std::time::Duration;
-use std::path::Path;
 
 impl Interpreter {
     pub fn execute_extension(&mut self, statement: Statement) -> Result<(), String> {

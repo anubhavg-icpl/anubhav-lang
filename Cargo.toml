@@ -1,6 +1,28 @@
 [package]
-name = "anubhav-lang"
+name = "anubhav_lang"
 version = "0.1.0"
 edition = "2021"
+authors = ["Anubhav G"]
+description = "A feature-rich educational programming language"
+repository = "https://github.com/anubhavg-icpl/anubhav-lang"
+license = "MIT"
+keywords = ["programming-language", "interpreter", "educational"]
+categories = ["compilers", "parser-implementations"]
+
+[lib]
+name = "anubhav_lang"
+path = "src/lib.rs"
+
+[[bin]]
+name = "anubhav"
+path = "src/main.rs"
 
 [dependencies]
+rand = "0.8"
+
+[dev-dependencies]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

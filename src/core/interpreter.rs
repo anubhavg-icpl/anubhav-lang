@@ -4,18 +4,18 @@ use std::io;
 use std::thread;
 use std::time::Duration;
 use std::path::Path;
-use crate::parser::{Statement, Expression, Parser};
-use crate::lexer::{Token, Lexer};
+use crate::lang::parser::{Statement, Expression, Parser};
+use crate::lang::lexer::{Token, Lexer};
 
 pub struct Interpreter {
-    intents: HashMap<String, String>,
-    calculations: HashMap<String, f64>,
-    variables: HashMap<String, f64>,
-    arrays: HashMap<String, Vec<f64>>,
-    dicts: HashMap<String, HashMap<String, f64>>, // Dictionary storage
-    functions: HashMap<String, (Vec<String>, Vec<Statement>)>, // name -> (parameters, body)
-    call_stack: Vec<HashMap<String, f64>>, // Stack of local variable scopes
-    random_seed: u64,
+    pub(crate) intents: HashMap<String, String>,
+    pub(crate) calculations: HashMap<String, f64>,
+    pub(crate) variables: HashMap<String, f64>,
+    pub(crate) arrays: HashMap<String, Vec<f64>>,
+    pub(crate) dicts: HashMap<String, HashMap<String, f64>>, // Dictionary storage
+    pub(crate) functions: HashMap<String, (Vec<String>, Vec<Statement>)>, // name -> (parameters, body)
+    pub(crate) call_stack: Vec<HashMap<String, f64>>, // Stack of local variable scopes
+    pub(crate) random_seed: u64,
 }
 
 impl Interpreter {
@@ -887,7 +887,7 @@ impl Interpreter {
         (self.random_seed as f64) / ((1u64 << 32) as f64)
     }
 
-    fn evaluate_expression(&mut self, expr: &Expression) -> Result<f64, String> {
+    pub(crate) fn evaluate_expression(&mut self, expr: &Expression) -> Result<f64, String> {
         match expr {
             Expression::Number(n) => Ok(*n),
             Expression::Recall(name) => {
