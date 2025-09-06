@@ -709,7 +709,7 @@ impl Parser {
                 self.advance();
                 Ok(Expression::Number(num))
             }
-            Token::Min | Token::Max | Token::Floor | Token::Ceil | Token::Round => {
+            Token::Min | Token::Max | Token::Floor | Token::Ceil | Token::Round | Token::Random => {
                 let op = self.current_token.clone();
                 self.advance();
                 
@@ -748,6 +748,19 @@ impl Parser {
                             left: Box::new(Expression::Number(0.0)), // Dummy left operand
                             operator: op,
                             right: Box::new(arg),
+                        })
+                    }
+                    Token::Random => {
+                        // Zero-argument function
+                        if self.current_token != Token::RightParen {
+                            return Err(format!("Expected ) after RANDOM"));
+                        }
+                        self.advance();
+                        
+                        Ok(Expression::BinaryOp {
+                            left: Box::new(Expression::Number(0.0)), // Dummy left operand
+                            operator: op,
+                            right: Box::new(Expression::Number(0.0)), // Dummy right operand
                         })
                     }
                     _ => unreachable!()

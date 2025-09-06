@@ -29,6 +29,7 @@ pub enum Token {
     Floor,
     Ceil,
     Round,
+    Random,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -254,6 +255,7 @@ impl Lexer {
                     "FLOOR" => Token::Floor,
                     "CEIL" => Token::Ceil,
                     "ROUND" => Token::Round,
+                    "RANDOM" => Token::Random,
                     _ => Token::Identifier(identifier),
                 }
             }

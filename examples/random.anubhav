@@ -1,0 +1,35 @@
+# Random number generation examples
+PRINT "Testing RANDOM() function"
+
+# Generate some random numbers
+CALCULATE rand1 RANDOM()
+CALCULATE rand2 RANDOM()
+CALCULATE rand3 RANDOM()
+
+PRINT "Random number 1:" rand1
+PRINT "Random number 2:" rand2  
+PRINT "Random number 3:" rand3
+
+# Generate random integers from 1 to 10
+CALCULATE temp1 RANDOM() * 10
+CALCULATE scaled1 FLOOR(RECALL temp1) + 1
+CALCULATE temp2 RANDOM() * 10  
+CALCULATE scaled2 FLOOR(RECALL temp2) + 1
+CALCULATE temp3 RANDOM() * 10
+CALCULATE scaled3 FLOOR(RECALL temp3) + 1
+
+PRINT "Random int 1-10:" scaled1
+PRINT "Random int 1-10:" scaled2
+PRINT "Random int 1-10:" scaled3
+
+# Generate random numbers in a loop
+PRINT "Random numbers in FOR loop:"
+FOR i 1 TO 5 DO
+    CALCULATE rand_in_loop RANDOM()
+    PRINT "Random" i ":" rand_in_loop
+END
+
+# Use random in calculations
+CALCULATE temp_rand RANDOM() * 100
+CALCULATE random_calc ROUND(RECALL temp_rand)
+PRINT "Random percentage:" random_calc

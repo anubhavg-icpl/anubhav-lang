@@ -6,6 +6,7 @@ pub struct Interpreter {
     intents: HashMap<String, String>,
     calculations: HashMap<String, f64>,
     variables: HashMap<String, f64>,
+    random_seed: u64,
 }
 
 impl Interpreter {
@@ -14,6 +15,7 @@ impl Interpreter {
             intents: HashMap::new(),
             calculations: HashMap::new(),
             variables: HashMap::new(),
+            random_seed: 12345, // Initial seed
         }
     }
 
@@ -173,8 +175,15 @@ impl Interpreter {
         }
         Ok(())
     }
+    
+    fn next_random(&mut self) -> f64 {
+        // Linear congruential generator: (a * seed + c) % m
+        // Using constants from Numerical Recipes
+        self.random_seed = ((self.random_seed.wrapping_mul(1664525)).wrapping_add(1013904223)) % (1u64 << 32);
+        (self.random_seed as f64) / ((1u64 << 32) as f64)
+    }
 
-    fn evaluate_expression(&self, expr: &Expression) -> Result<f64, String> {
+    fn evaluate_expression(&mut self, expr: &Expression) -> Result<f64, String> {
         match expr {
             Expression::Number(n) => Ok(*n),
             Expression::Recall(name) => {
@@ -223,6 +232,7 @@ impl Interpreter {
                     Token::Floor => Ok(right_val.floor()),
                     Token::Ceil => Ok(right_val.ceil()),
                     Token::Round => Ok(right_val.round()),
+                    Token::Random => Ok(self.next_random()),
                     _ => Err(format!("Invalid operator: {:?}", operator))
                 }
             }
