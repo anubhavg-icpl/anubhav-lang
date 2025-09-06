@@ -4,6 +4,8 @@ pub enum Token {
     Manifest,
     Calculate,
     With,
+    Store,
+    Recall,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -136,6 +138,8 @@ impl Lexer {
                     "MANIFEST" => Token::Manifest,
                     "CALCULATE" => Token::Calculate,
                     "WITH" => Token::With,
+                    "STORE" => Token::Store,
+                    "RECALL" => Token::Recall,
                     _ => Token::Identifier(identifier),
                 }
             }

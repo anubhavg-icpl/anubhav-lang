@@ -3,6 +3,7 @@ use crate::lexer::{Lexer, Token};
 #[derive(Debug, Clone)]
 pub enum Expression {
     Number(f64),
+    Recall(String),
     BinaryOp {
         left: Box<Expression>,
         operator: Token,
@@ -23,6 +24,10 @@ pub enum Statement {
     Calculate {
         name: String,
         expression: Expression,
+    },
+    Store {
+        name: String,
+        value: Expression,
     },
 }
 
@@ -57,6 +62,9 @@ impl Parser {
                 }
                 Token::Calculate => {
                     statements.push(self.parse_calculate()?);
+                }
+                Token::Store => {
+                    statements.push(self.parse_store()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -128,6 +136,21 @@ impl Parser {
         Ok(Statement::Calculate { name, expression })
     }
 
+    fn parse_store(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip STORE
+        
+        let name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected identifier after STORE"));
+        };
+        self.advance();
+        
+        let value = self.parse_expression()?;
+        
+        Ok(Statement::Store { name, value })
+    }
+
     fn parse_expression(&mut self) -> Result<Expression, String> {
         self.parse_term()
     }
@@ -172,6 +195,16 @@ impl Parser {
                 let num = *n;
                 self.advance();
                 Ok(Expression::Number(num))
+            }
+            Token::Recall => {
+                self.advance(); // Skip RECALL
+                if let Token::Identifier(name) = &self.current_token {
+                    let var_name = name.clone();
+                    self.advance();
+                    Ok(Expression::Recall(var_name))
+                } else {
+                    Err(format!("Expected identifier after RECALL"))
+                }
             }
             Token::LeftParen => {
                 self.advance(); // Skip (

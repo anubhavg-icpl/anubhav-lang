@@ -1,0 +1,9 @@
+STORE x 10
+STORE y 20
+
+CALCULATE sum RECALL x + RECALL y
+MANIFEST sum
+
+STORE multiplier 3
+CALCULATE result RECALL sum * RECALL multiplier
+MANIFEST result

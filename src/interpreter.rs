@@ -5,6 +5,7 @@ use crate::lexer::Token;
 pub struct Interpreter {
     intents: HashMap<String, String>,
     calculations: HashMap<String, f64>,
+    variables: HashMap<String, f64>,
 }
 
 impl Interpreter {
@@ -12,6 +13,7 @@ impl Interpreter {
         Interpreter {
             intents: HashMap::new(),
             calculations: HashMap::new(),
+            variables: HashMap::new(),
         }
     }
 
@@ -42,6 +44,10 @@ impl Interpreter {
                     let result = self.evaluate_expression(&expression)?;
                     self.calculations.insert(name, result);
                 }
+                Statement::Store { name, value } => {
+                    let result = self.evaluate_expression(&value)?;
+                    self.variables.insert(name, result);
+                }
             }
         }
         Ok(())
@@ -50,6 +56,12 @@ impl Interpreter {
     fn evaluate_expression(&self, expr: &Expression) -> Result<f64, String> {
         match expr {
             Expression::Number(n) => Ok(*n),
+            Expression::Recall(name) => {
+                self.variables.get(name)
+                    .or_else(|| self.calculations.get(name))
+                    .copied()
+                    .ok_or_else(|| format!("Variable '{}' not found", name))
+            }
             Expression::BinaryOp { left, operator, right } => {
                 let left_val = self.evaluate_expression(left)?;
                 let right_val = self.evaluate_expression(right)?;
