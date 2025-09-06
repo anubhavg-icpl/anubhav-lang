@@ -52,22 +52,22 @@ PRINT "2^3 =" power
 CALCULATE modulo 10 % 3
 PRINT "10 % 3 =" modulo
 
-CALCULATE maximum MAX(15 + 25)
+CALCULATE maximum MAX(15, 25)
 PRINT "MAX(15, 25) =" maximum
 
-CALCULATE minimum MIN(15 + 25)
+CALCULATE minimum MIN(15, 25)
 PRINT "MIN(15, 25) =" minimum
 
-CALCULATE rounded ROUND 3.7
+CALCULATE rounded ROUND(3.7)
 PRINT "ROUND(3.7) =" rounded
 
-CALCULATE floored FLOOR 3.7
+CALCULATE floored FLOOR(3.7)
 PRINT "FLOOR(3.7) =" floored
 
-CALCULATE ceiled CEIL 3.2
+CALCULATE ceiled CEIL(3.2)
 PRINT "CEIL(3.2) =" ceiled
 
-CALCULATE rand RANDOM
+CALCULATE rand RANDOM()
 PRINT "RANDOM =" rand
 
 PRINT ""

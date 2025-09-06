@@ -488,6 +488,24 @@ impl Parser {
                 Token::Parse => {
                     statements.push(self.parse_parse_number()?);
                 }
+                Token::Fold => {
+                    statements.push(self.parse_fold()?);
+                }
+                Token::Zip => {
+                    statements.push(self.parse_zip()?);
+                }
+                Token::Flatten => {
+                    statements.push(self.parse_flatten()?);
+                }
+                Token::CountOp => {
+                    statements.push(self.parse_count()?);
+                }
+                Token::ReplaceOp => {
+                    statements.push(self.parse_replace()?);
+                }
+                Token::SplitOp => {
+                    statements.push(self.parse_split()?);
+                }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
                 }
@@ -2237,5 +2255,152 @@ impl Parser {
         self.advance();
         
         Ok(Statement::ParseNumber { source, result_name })
+    }
+
+    fn parse_fold(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip FOLD
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after FOLD"));
+        };
+        self.advance();
+        
+        let initial = self.parse_expression()?;
+        let operation = self.parse_expression()?;
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for FOLD"));
+        };
+        self.advance();
+        
+        Ok(Statement::Fold { array_name, initial, operation, result_name })
+    }
+
+    fn parse_zip(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip ZIP
+        let array1 = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected first array name after ZIP"));
+        };
+        self.advance();
+        
+        let array2 = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected second array name for ZIP"));
+        };
+        self.advance();
+        
+        let result_array = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result array name for ZIP"));
+        };
+        self.advance();
+        
+        Ok(Statement::Zip { array1, array2, result_array })
+    }
+
+    fn parse_flatten(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip FLATTEN
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after FLATTEN"));
+        };
+        self.advance();
+        
+        let result_array = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result array name for FLATTEN"));
+        };
+        self.advance();
+        
+        Ok(Statement::Flatten { array_name, result_array })
+    }
+
+    fn parse_count(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip COUNT
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after COUNT"));
+        };
+        self.advance();
+        
+        let condition = self.parse_expression()?;
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for COUNT"));
+        };
+        self.advance();
+        
+        Ok(Statement::Count { array_name, condition, result_name })
+    }
+
+    fn parse_replace(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip REPLACE
+        let text = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected target string after REPLACE"));
+        };
+        self.advance();
+        
+        let pattern = if let Token::StringLiteral(p) = &self.current_token {
+            p.clone()
+        } else {
+            return Err(format!("Expected pattern string for REPLACE"));
+        };
+        self.advance();
+        
+        let replacement = if let Token::StringLiteral(r) = &self.current_token {
+            r.clone()
+        } else {
+            return Err(format!("Expected replacement string for REPLACE"));
+        };
+        self.advance();
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for REPLACE"));
+        };
+        self.advance();
+        
+        Ok(Statement::Replace { text, pattern, replacement, result_name })
+    }
+
+    fn parse_split(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip SPLIT
+        let text = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected string variable after SPLIT"));
+        };
+        self.advance();
+        
+        let delimiter = if let Token::StringLiteral(d) = &self.current_token {
+            d.clone()
+        } else {
+            return Err(format!("Expected delimiter string for SPLIT"));
+        };
+        self.advance();
+        
+        let result_array = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result array name for SPLIT"));
+        };
+        self.advance();
+        
+        Ok(Statement::Split { text, delimiter, result_array })
     }
 }

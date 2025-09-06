@@ -1,0 +1,5 @@
+# Exported from Anubhav
+ARRAY export_data
+PUSH export_data 100
+PUSH export_data 200
+STORE total 17

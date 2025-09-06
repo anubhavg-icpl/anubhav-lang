@@ -99,7 +99,6 @@ pub enum Token {
     Includes,
     IndexOfOp,
     Pad,
-    RepeatOp,
     Eval,
     TypeOfOp,
     CloneOp,

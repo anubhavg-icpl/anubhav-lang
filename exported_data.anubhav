@@ -1,0 +1,8 @@
+# Exported from Anubhav
+INTENT greeting "Hello from Anubhav!"
+STORE pi 3.14159
+STORE squared_pi 9.869587728099999
+ARRAY numbers
+PUSH numbers 10
+PUSH numbers 20
+PUSH numbers 30

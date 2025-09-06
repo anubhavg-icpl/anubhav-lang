@@ -97,15 +97,15 @@ PRINT ""
 PRINT "9. ADVANCED FEATURES"
 
 # Random number
-CALCULATE rand RANDOM
+CALCULATE rand RANDOM()
 PRINT "Random number:" rand
 
 # Math functions
-CALCULATE rounded ROUND 3.7
+CALCULATE rounded ROUND(3.7)
 PRINT "Round(3.7):" rounded
 
 # Min/Max
-CALCULATE maximum MAX(5 + 10)
+CALCULATE maximum MAX(5, 10)
 PRINT "Max(5, 10):" maximum
 
 # 10. Module system

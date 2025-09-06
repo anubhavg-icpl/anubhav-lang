@@ -797,9 +797,83 @@ impl Interpreter {
                         return Err(format!("Source '{}' not found", source));
                     }
                 }
-                _ => {
-                    // Remaining unimplemented features
-                    return Err(format!("Feature not yet implemented"));
+                Statement::Fold { array_name, initial, operation, result_name } => {
+                    // Simplified fold implementation - clone array to avoid borrowing issues
+                    let array_clone = self.arrays.get(&array_name).cloned();
+                    if let Some(array) = array_clone {
+                        let mut accumulator = self.evaluate_expression(&initial)?;
+                        for &value in &array {
+                            self.variables.insert("acc".to_string(), accumulator);
+                            self.variables.insert("item".to_string(), value);
+                            accumulator = self.evaluate_expression(&operation)?;
+                        }
+                        self.variables.insert(result_name.clone(), accumulator);
+                        self.variables.remove("acc");
+                        self.variables.remove("item");
+                        println!("Folded array '{}' into result: {}", array_name, accumulator);
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::Zip { array1, array2, result_array } => {
+                    if let (Some(arr1), Some(arr2)) = (self.arrays.get(&array1), self.arrays.get(&array2)) {
+                        let mut zipped = Vec::new();
+                        let len = arr1.len().min(arr2.len());
+                        for i in 0..len {
+                            zipped.push(arr1[i]);
+                            zipped.push(arr2[i]);
+                        }
+                        self.arrays.insert(result_array.clone(), zipped);
+                        println!("Zipped arrays '{}' and '{}' into '{}'", array1, array2, result_array);
+                    } else {
+                        return Err(format!("One or both arrays not found"));
+                    }
+                }
+                Statement::Flatten { array_name, result_array } => {
+                    // For simplicity, just copy the array (would need nested array support for true flatten)
+                    if let Some(array) = self.arrays.get(&array_name).cloned() {
+                        self.arrays.insert(result_array.clone(), array);
+                        println!("Flattened array '{}' into '{}'", array_name, result_array);
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::Count { array_name, condition, result_name } => {
+                    let array_clone = self.arrays.get(&array_name).cloned();
+                    if let Some(array) = array_clone {
+                        let mut count = 0;
+                        for &value in &array {
+                            self.variables.insert("item".to_string(), value);
+                            if self.evaluate_expression(&condition)? != 0.0 {
+                                count += 1;
+                            }
+                        }
+                        self.variables.remove("item");
+                        self.variables.insert(result_name.clone(), count as f64);
+                        println!("Counted {} items matching condition in '{}'", count, array_name);
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::Replace { text, pattern, replacement, result_name } => {
+                    if let Some(target_str) = self.intents.get(&text) {
+                        let replaced = target_str.replace(&pattern, &replacement);
+                        self.intents.insert(result_name.clone(), replaced.clone());
+                        println!("Replaced '{}' with '{}' in string", pattern, replacement);
+                    } else {
+                        return Err(format!("String '{}' not found", text));
+                    }
+                }
+                Statement::Split { text, delimiter, result_array } => {
+                    if let Some(string) = self.intents.get(&text) {
+                        let parts: Vec<&str> = string.split(&delimiter).collect();
+                        // Convert to array of indices (since we can't store strings in arrays)
+                        let indices: Vec<f64> = (0..parts.len()).map(|i| i as f64).collect();
+                        self.arrays.insert(result_array.clone(), indices);
+                        println!("Split string '{}' by '{}' into {} parts", text, delimiter, parts.len());
+                    } else {
+                        return Err(format!("String '{}' not found", text));
+                    }
                 }
             }
         }
