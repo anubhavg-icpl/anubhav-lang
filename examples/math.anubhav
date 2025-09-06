@@ -1,0 +1,13 @@
+INTENT welcome "Let's do some math!"
+MANIFEST welcome
+
+CALCULATE pi_approx 22 / 7
+CALCULATE area 3.14 * 5 * 5
+CALCULATE equation 2 * 3 + 4 * 5
+
+INTENT result_msg "The calculations are complete!"
+
+MANIFEST pi_approx
+MANIFEST area
+MANIFEST equation
+MANIFEST result_msg

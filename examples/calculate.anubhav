@@ -1,0 +1,9 @@
+CALCULATE sum 10 + 20
+CALCULATE product 5 * 8
+CALCULATE division 100 / 4
+CALCULATE complex (10 + 5) * 2 - 10
+
+MANIFEST sum
+MANIFEST product
+MANIFEST division
+MANIFEST complex

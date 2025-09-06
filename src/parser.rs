@@ -1,6 +1,16 @@
 use crate::lexer::{Lexer, Token};
 
 #[derive(Debug, Clone)]
+pub enum Expression {
+    Number(f64),
+    BinaryOp {
+        left: Box<Expression>,
+        operator: Token,
+        right: Box<Expression>,
+    },
+}
+
+#[derive(Debug, Clone)]
 pub enum Statement {
     IntentDeclaration {
         name: String,
@@ -8,6 +18,10 @@ pub enum Statement {
     },
     ManifestCall {
         intent_name: String,
+    },
+    Calculate {
+        name: String,
+        expression: Expression,
     },
 }
 
@@ -39,6 +53,9 @@ impl Parser {
                 }
                 Token::Manifest => {
                     statements.push(self.parse_manifest_call()?);
+                }
+                Token::Calculate => {
+                    statements.push(self.parse_calculate()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -80,5 +97,78 @@ impl Parser {
         self.advance();
         
         Ok(Statement::ManifestCall { intent_name })
+    }
+
+    fn parse_calculate(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip CALCULATE
+        
+        let name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected identifier after CALCULATE"));
+        };
+        self.advance();
+        
+        let expression = self.parse_expression()?;
+        
+        Ok(Statement::Calculate { name, expression })
+    }
+
+    fn parse_expression(&mut self) -> Result<Expression, String> {
+        self.parse_term()
+    }
+
+    fn parse_term(&mut self) -> Result<Expression, String> {
+        let mut left = self.parse_factor()?;
+        
+        while matches!(self.current_token, Token::Plus | Token::Minus) {
+            let operator = self.current_token.clone();
+            self.advance();
+            let right = self.parse_factor()?;
+            left = Expression::BinaryOp {
+                left: Box::new(left),
+                operator,
+                right: Box::new(right),
+            };
+        }
+        
+        Ok(left)
+    }
+
+    fn parse_factor(&mut self) -> Result<Expression, String> {
+        let mut left = self.parse_primary()?;
+        
+        while matches!(self.current_token, Token::Star | Token::Slash) {
+            let operator = self.current_token.clone();
+            self.advance();
+            let right = self.parse_primary()?;
+            left = Expression::BinaryOp {
+                left: Box::new(left),
+                operator,
+                right: Box::new(right),
+            };
+        }
+        
+        Ok(left)
+    }
+
+    fn parse_primary(&mut self) -> Result<Expression, String> {
+        match &self.current_token {
+            Token::Number(n) => {
+                let num = *n;
+                self.advance();
+                Ok(Expression::Number(num))
+            }
+            Token::LeftParen => {
+                self.advance(); // Skip (
+                let expr = self.parse_expression()?;
+                if self.current_token != Token::RightParen {
+                    return Err(format!("Expected closing parenthesis"));
+                }
+                self.advance(); // Skip )
+                Ok(expr)
+            }
+            _ => Err(format!("Unexpected token in expression: {:?}", self.current_token))
+        }
     }
 }

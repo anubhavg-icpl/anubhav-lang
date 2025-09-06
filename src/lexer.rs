@@ -2,8 +2,16 @@
 pub enum Token {
     Intent,
     Manifest,
+    Calculate,
     Identifier(String),
     StringLiteral(String),
+    Number(f64),
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    LeftParen,
+    RightParen,
     EOF,
 }
 
@@ -68,6 +76,21 @@ impl Lexer {
         result
     }
 
+    fn read_number(&mut self) -> f64 {
+        let mut result = String::new();
+        
+        while let Some(ch) = self.current_char {
+            if ch.is_numeric() || ch == '.' {
+                result.push(ch);
+                self.advance();
+            } else {
+                break;
+            }
+        }
+        
+        result.parse().unwrap_or(0.0)
+    }
+
     pub fn next_token(&mut self) -> Token {
         self.skip_whitespace();
         
@@ -77,11 +100,40 @@ impl Lexer {
                 let string_val = self.read_string();
                 Token::StringLiteral(string_val)
             }
+            Some('+') => {
+                self.advance();
+                Token::Plus
+            }
+            Some('-') => {
+                self.advance();
+                Token::Minus
+            }
+            Some('*') => {
+                self.advance();
+                Token::Star
+            }
+            Some('/') => {
+                self.advance();
+                Token::Slash
+            }
+            Some('(') => {
+                self.advance();
+                Token::LeftParen
+            }
+            Some(')') => {
+                self.advance();
+                Token::RightParen
+            }
+            Some(ch) if ch.is_numeric() => {
+                let num = self.read_number();
+                Token::Number(num)
+            }
             Some(ch) if ch.is_alphabetic() => {
                 let identifier = self.read_identifier();
                 match identifier.as_str() {
                     "INTENT" => Token::Intent,
                     "MANIFEST" => Token::Manifest,
+                    "CALCULATE" => Token::Calculate,
                     _ => Token::Identifier(identifier),
                 }
             }
