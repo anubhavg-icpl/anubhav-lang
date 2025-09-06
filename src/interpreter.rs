@@ -1,5 +1,9 @@
 use std::collections::HashMap;
 use std::fs;
+use std::io::{self, Write};
+use std::thread;
+use std::time::Duration;
+use std::path::Path;
 use crate::parser::{Statement, Expression, Parser};
 use crate::lexer::{Token, Lexer};
 
@@ -8,6 +12,7 @@ pub struct Interpreter {
     calculations: HashMap<String, f64>,
     variables: HashMap<String, f64>,
     arrays: HashMap<String, Vec<f64>>,
+    dicts: HashMap<String, HashMap<String, f64>>, // Dictionary storage
     functions: HashMap<String, (Vec<String>, Vec<Statement>)>, // name -> (parameters, body)
     call_stack: Vec<HashMap<String, f64>>, // Stack of local variable scopes
     random_seed: u64,
@@ -20,6 +25,7 @@ impl Interpreter {
             calculations: HashMap::new(),
             variables: HashMap::new(),
             arrays: HashMap::new(),
+            dicts: HashMap::new(),
             functions: HashMap::new(),
             call_stack: Vec::new(),
             random_seed: 12345, // Initial seed

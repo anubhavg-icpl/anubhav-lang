@@ -149,6 +149,62 @@ pub enum Statement {
         separator: String,
         result_name: String,
     },
+    DictCreate {
+        name: String,
+    },
+    DictPut {
+        dict_name: String,
+        key: String,
+        value: Expression,
+    },
+    DictFetch {
+        dict_name: String,
+        key: String,
+        result_name: String,
+    },
+    DictKeys {
+        dict_name: String,
+        result_array: String,
+    },
+    DictValues {
+        dict_name: String,
+        result_array: String,
+    },
+    DictDelete {
+        dict_name: String,
+        key: String,
+    },
+    ReadFile {
+        filename: String,
+        result_name: String,
+    },
+    WriteFile {
+        filename: String,
+        content: String,
+    },
+    AppendFile {
+        filename: String,
+        content: String,
+    },
+    FileExists {
+        filename: String,
+        result_name: String,
+    },
+    Sleep {
+        milliseconds: Expression,
+    },
+    Input {
+        prompt: String,
+        result_name: String,
+    },
+    GetType {
+        variable: String,
+        result_name: String,
+    },
+    ParseNumber {
+        source: String,
+        result_name: String,
+    },
 }
 
 pub struct Parser {
@@ -277,6 +333,48 @@ impl Parser {
                 }
                 Token::Join => {
                     statements.push(self.parse_array_join()?);
+                }
+                Token::Dict => {
+                    statements.push(self.parse_dict_create()?);
+                }
+                Token::Put => {
+                    statements.push(self.parse_dict_put()?);
+                }
+                Token::Fetch => {
+                    statements.push(self.parse_dict_fetch()?);
+                }
+                Token::Keys => {
+                    statements.push(self.parse_dict_keys()?);
+                }
+                Token::Values => {
+                    statements.push(self.parse_dict_values()?);
+                }
+                Token::Delete => {
+                    statements.push(self.parse_dict_delete()?);
+                }
+                Token::ReadFile => {
+                    statements.push(self.parse_read_file()?);
+                }
+                Token::WriteFile => {
+                    statements.push(self.parse_write_file()?);
+                }
+                Token::AppendFile => {
+                    statements.push(self.parse_append_file()?);
+                }
+                Token::Exists => {
+                    statements.push(self.parse_file_exists()?);
+                }
+                Token::Sleep => {
+                    statements.push(self.parse_sleep()?);
+                }
+                Token::Input => {
+                    statements.push(self.parse_input()?);
+                }
+                Token::Type => {
+                    statements.push(self.parse_get_type()?);
+                }
+                Token::Parse => {
+                    statements.push(self.parse_parse_number()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -1533,5 +1631,287 @@ impl Parser {
         self.advance();
         
         Ok(Statement::ArrayJoin { array_name, separator, result_name })
+    }
+
+    fn parse_dict_create(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip DICT
+        
+        let name = if let Token::Identifier(n) = &self.current_token {
+            n.clone()
+        } else {
+            return Err(format!("Expected dictionary name after DICT"));
+        };
+        self.advance();
+        
+        Ok(Statement::DictCreate { name })
+    }
+
+    fn parse_dict_put(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip PUT
+        
+        let dict_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected dictionary name after PUT"));
+        };
+        self.advance();
+        
+        let key = if let Token::StringLiteral(k) = &self.current_token {
+            k.clone()
+        } else if let Token::Identifier(k) = &self.current_token {
+            k.clone()
+        } else {
+            return Err(format!("Expected key for PUT"));
+        };
+        self.advance();
+        
+        let value = self.parse_expression()?;
+        
+        Ok(Statement::DictPut { dict_name, key, value })
+    }
+
+    fn parse_dict_fetch(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip FETCH
+        
+        let dict_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected dictionary name after FETCH"));
+        };
+        self.advance();
+        
+        let key = if let Token::StringLiteral(k) = &self.current_token {
+            k.clone()
+        } else if let Token::Identifier(k) = &self.current_token {
+            k.clone()
+        } else {
+            return Err(format!("Expected key for FETCH"));
+        };
+        self.advance();
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for FETCH"));
+        };
+        self.advance();
+        
+        Ok(Statement::DictFetch { dict_name, key, result_name })
+    }
+
+    fn parse_dict_keys(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip KEYS
+        
+        let dict_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected dictionary name after KEYS"));
+        };
+        self.advance();
+        
+        let result_array = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result array name for KEYS"));
+        };
+        self.advance();
+        
+        Ok(Statement::DictKeys { dict_name, result_array })
+    }
+
+    fn parse_dict_values(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip VALUES
+        
+        let dict_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected dictionary name after VALUES"));
+        };
+        self.advance();
+        
+        let result_array = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result array name for VALUES"));
+        };
+        self.advance();
+        
+        Ok(Statement::DictValues { dict_name, result_array })
+    }
+
+    fn parse_dict_delete(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip DELETE
+        
+        let dict_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected dictionary name after DELETE"));
+        };
+        self.advance();
+        
+        let key = if let Token::StringLiteral(k) = &self.current_token {
+            k.clone()
+        } else if let Token::Identifier(k) = &self.current_token {
+            k.clone()
+        } else {
+            return Err(format!("Expected key for DELETE"));
+        };
+        self.advance();
+        
+        Ok(Statement::DictDelete { dict_name, key })
+    }
+
+    fn parse_read_file(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip READ_FILE
+        
+        let filename = if let Token::StringLiteral(f) = &self.current_token {
+            f.clone()
+        } else {
+            return Err(format!("Expected filename string after READ_FILE"));
+        };
+        self.advance();
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for READ_FILE"));
+        };
+        self.advance();
+        
+        Ok(Statement::ReadFile { filename, result_name })
+    }
+
+    fn parse_write_file(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip WRITE_FILE
+        
+        let filename = if let Token::StringLiteral(f) = &self.current_token {
+            f.clone()
+        } else {
+            return Err(format!("Expected filename string after WRITE_FILE"));
+        };
+        self.advance();
+        
+        let content = if let Token::StringLiteral(c) = &self.current_token {
+            c.clone()
+        } else if let Token::Identifier(var) = &self.current_token {
+            format!("${{{}}}", var)
+        } else {
+            return Err(format!("Expected content for WRITE_FILE"));
+        };
+        self.advance();
+        
+        Ok(Statement::WriteFile { filename, content })
+    }
+
+    fn parse_append_file(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip APPEND_FILE
+        
+        let filename = if let Token::StringLiteral(f) = &self.current_token {
+            f.clone()
+        } else {
+            return Err(format!("Expected filename string after APPEND_FILE"));
+        };
+        self.advance();
+        
+        let content = if let Token::StringLiteral(c) = &self.current_token {
+            c.clone()
+        } else if let Token::Identifier(var) = &self.current_token {
+            format!("${{{}}}", var)
+        } else {
+            return Err(format!("Expected content for APPEND_FILE"));
+        };
+        self.advance();
+        
+        Ok(Statement::AppendFile { filename, content })
+    }
+
+    fn parse_file_exists(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip EXISTS
+        
+        let filename = if let Token::StringLiteral(f) = &self.current_token {
+            f.clone()
+        } else {
+            return Err(format!("Expected filename string after EXISTS"));
+        };
+        self.advance();
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for EXISTS"));
+        };
+        self.advance();
+        
+        Ok(Statement::FileExists { filename, result_name })
+    }
+
+    fn parse_sleep(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip SLEEP
+        
+        let milliseconds = self.parse_expression()?;
+        
+        Ok(Statement::Sleep { milliseconds })
+    }
+
+    fn parse_input(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip INPUT
+        
+        let prompt = if let Token::StringLiteral(p) = &self.current_token {
+            p.clone()
+        } else {
+            return Err(format!("Expected prompt string after INPUT"));
+        };
+        self.advance();
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for INPUT"));
+        };
+        self.advance();
+        
+        Ok(Statement::Input { prompt, result_name })
+    }
+
+    fn parse_get_type(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip TYPE
+        
+        let variable = if let Token::Identifier(v) = &self.current_token {
+            v.clone()
+        } else {
+            return Err(format!("Expected variable name after TYPE"));
+        };
+        self.advance();
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for TYPE"));
+        };
+        self.advance();
+        
+        Ok(Statement::GetType { variable, result_name })
+    }
+
+    fn parse_parse_number(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip PARSE
+        
+        let source = if let Token::Identifier(s) = &self.current_token {
+            s.clone()
+        } else if let Token::StringLiteral(s) = &self.current_token {
+            s.clone()
+        } else {
+            return Err(format!("Expected source for PARSE"));
+        };
+        self.advance();
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for PARSE"));
+        };
+        self.advance();
+        
+        Ok(Statement::ParseNumber { source, result_name })
     }
 }

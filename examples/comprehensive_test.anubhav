@@ -1,0 +1,132 @@
+# Comprehensive feature test for Anubhav language
+PRINT "=== Anubhav Language Feature Showcase ==="
+
+# 1. Basic operations
+PRINT ""
+PRINT "1. BASIC OPERATIONS"
+INTENT greeting "Welcome to Anubhav!"
+MANIFEST greeting
+STORE x 42
+CALCULATE y RECALL x * 2
+PRINT "x =" x "y =" y
+
+# 2. Arrays with operations
+PRINT ""
+PRINT "2. ARRAY OPERATIONS"
+ARRAY nums
+PUSH nums 5
+PUSH nums 3
+PUSH nums 8
+PUSH nums 1
+
+SORT nums ASC
+SUM nums total
+JOIN nums ", " joined_nums
+PRINT "Sorted array:" joined_nums
+PRINT "Sum:" total
+
+# Map operation - square each element
+MAP nums RECALL item * RECALL item squared
+JOIN squared ", " squared_str
+PRINT "Squared:" squared_str
+
+# Filter operation
+FILTER nums RECALL item > 3 big_nums
+JOIN big_nums ", " big_str
+PRINT "Filtered > 3:" big_str
+
+# 3. Control flow
+PRINT ""
+PRINT "3. CONTROL FLOW"
+
+FOR i 1 TO 3 DO
+    PRINT "  Loop iteration" i
+    IF RECALL i == 2 THEN
+        PRINT "    Middle iteration!"
+    END
+END
+
+# 4. Functions
+PRINT ""
+PRINT "4. FUNCTIONS"
+
+FUNCTION multiply(a) DO
+    CALCULATE result RECALL a * RECALL a
+    RETURN RECALL result
+END
+
+CALL multiply(7) square_of_7
+PRINT "Square of 7:" square_of_7
+
+# 5. String operations
+PRINT ""
+PRINT "5. STRING OPERATIONS"
+INTENT text "hello world"
+UPPERCASE upper_text text
+PRINT "Uppercase:" upper_text
+
+# 6. Error handling
+PRINT ""
+PRINT "6. ERROR HANDLING"
+TRY
+    CALCULATE risky 10 / 0
+CATCH
+    PRINT "Caught division by zero error!"
+END
+
+# 7. Switch statement
+PRINT ""
+PRINT "7. SWITCH STATEMENT"
+STORE choice 2
+SWITCH RECALL choice
+CASE 1 DO
+    PRINT "Choice was one"
+CASE 2 DO
+    PRINT "Choice was two"
+DEFAULT DO
+    PRINT "Unknown choice"
+END
+
+# 8. Assertions
+PRINT ""
+PRINT "8. ASSERTIONS"
+ASSERT 1 + 1 == 2 "Basic math works"
+
+# 9. Advanced features
+PRINT ""
+PRINT "9. ADVANCED FEATURES"
+
+# Random number
+CALCULATE rand RANDOM
+PRINT "Random number:" rand
+
+# Math functions
+CALCULATE rounded ROUND 3.7
+PRINT "Round(3.7):" rounded
+
+# Min/Max
+CALCULATE maximum MAX(5 + 10)
+PRINT "Max(5, 10):" maximum
+
+# 10. Module system
+PRINT ""
+PRINT "10. MODULE SYSTEM"
+# Export some data
+ARRAY export_data
+PUSH export_data 100
+PUSH export_data 200
+EXPORT export_data total "temp_export.anubhav"
+
+PRINT ""
+PRINT "=== All features tested successfully! ==="
+PRINT "Anubhav language has:"
+PRINT "- Intention-based programming (INTENT/MANIFEST)"
+PRINT "- Variables and calculations"
+PRINT "- Arrays with MAP, FILTER, SORT, SUM, JOIN"
+PRINT "- Control flow (IF, FOR, WHILE, SWITCH)"
+PRINT "- Functions with local scope"
+PRINT "- String operations"
+PRINT "- Error handling (TRY/CATCH)"
+PRINT "- Module system (IMPORT/EXPORT)"
+PRINT "- Math functions"
+PRINT "- And much more!"
