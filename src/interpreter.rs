@@ -187,6 +187,26 @@ impl Interpreter {
                     
                     self.intents.insert(name.clone(), result);
                 }
+                Statement::Switch { expression, cases, default_case } => {
+                    let switch_value = self.evaluate_expression(&expression)?;
+                    
+                    let mut executed = false;
+                    
+                    for (case_value, case_body) in cases {
+                        let case_val = self.evaluate_expression(&case_value)?;
+                        if switch_value == case_val {
+                            self.execute(case_body.clone())?;
+                            executed = true;
+                            break;
+                        }
+                    }
+                    
+                    if !executed {
+                        if let Some(default_body) = default_case {
+                            self.execute(default_body.clone())?;
+                        }
+                    }
+                }
             }
         }
         Ok(())

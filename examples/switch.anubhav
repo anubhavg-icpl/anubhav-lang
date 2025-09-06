@@ -1,0 +1,73 @@
+# SWITCH/CASE statement examples
+PRINT "Testing SWITCH/CASE statements"
+
+# Test basic switch
+STORE grade 85
+SWITCH RECALL grade / 10
+    CASE 10 DO
+        PRINT "Perfect score!"
+    CASE 9 DO 
+        PRINT "Excellent work!"
+    CASE 8 DO
+        PRINT "Good job!"
+    DEFAULT DO
+        PRINT "Keep studying!"
+END
+
+# Test with variables
+STORE day 3
+SWITCH RECALL day
+    CASE 1 DO
+        INTENT day_name "Monday"
+        MANIFEST day_name
+    CASE 2 DO
+        INTENT day_name "Tuesday" 
+        MANIFEST day_name
+    CASE 3 DO
+        INTENT day_name "Wednesday"
+        MANIFEST day_name
+    CASE 4 DO
+        INTENT day_name "Thursday"
+        MANIFEST day_name
+    CASE 5 DO
+        INTENT day_name "Friday"
+        MANIFEST day_name
+    DEFAULT DO
+        PRINT "Weekend!"
+END
+
+# Test with expressions
+STORE x 5
+STORE y 3
+CALCULATE result RECALL x + RECALL y
+SWITCH RECALL result
+    CASE 8 DO
+        PRINT "Result is 8"
+        CALCULATE doubled RECALL result * 2
+        PRINT "Doubled:" doubled
+    CASE 10 DO
+        PRINT "Result is 10"
+    DEFAULT DO
+        PRINT "Unexpected result:" result
+END
+
+# Test nested switch
+STORE category 1
+STORE subcategory 2
+
+SWITCH RECALL category
+    CASE 1 DO
+        PRINT "Category: Technology"
+        SWITCH RECALL subcategory
+            CASE 1 DO
+                PRINT "Subcategory: Software"
+            CASE 2 DO
+                PRINT "Subcategory: Hardware"
+            DEFAULT DO
+                PRINT "Subcategory: Other"
+        END
+    CASE 2 DO
+        PRINT "Category: Science"
+    DEFAULT DO
+        PRINT "Category: Unknown"
+END

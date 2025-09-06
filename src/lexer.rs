@@ -35,6 +35,9 @@ pub enum Token {
     Uppercase,
     Lowercase,
     Contains,
+    Switch,
+    Case,
+    Default,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -266,6 +269,9 @@ impl Lexer {
                     "UPPERCASE" => Token::Uppercase,
                     "LOWERCASE" => Token::Lowercase,
                     "CONTAINS" => Token::Contains,
+                    "SWITCH" => Token::Switch,
+                    "CASE" => Token::Case,
+                    "DEFAULT" => Token::Default,
                     _ => Token::Identifier(identifier),
                 }
             }

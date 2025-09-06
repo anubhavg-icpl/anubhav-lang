@@ -75,6 +75,11 @@ pub enum Statement {
         operation: String,
         source: String,
     },
+    Switch {
+        expression: Expression,
+        cases: Vec<(Expression, Vec<Statement>)>,
+        default_case: Option<Vec<Statement>>,
+    },
 }
 
 pub struct Parser {
@@ -144,6 +149,9 @@ impl Parser {
                 }
                 Token::Uppercase | Token::Lowercase => {
                     statements.push(self.parse_string_transform()?);
+                }
+                Token::Switch => {
+                    statements.push(self.parse_switch()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -622,6 +630,104 @@ impl Parser {
         };
         
         Ok(Statement::StringTransform { name, operation, source })
+    }
+    
+    fn parse_switch(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip SWITCH
+        
+        let expression = self.parse_expression()?;
+        
+        let mut cases = Vec::new();
+        let mut default_case = None;
+        
+        while self.current_token != Token::End {
+            match self.current_token {
+                Token::Case => {
+                    self.advance(); // Skip CASE
+                    
+                    let case_value = self.parse_expression()?;
+                    
+                    if self.current_token != Token::Do {
+                        return Err("Expected DO after CASE value".to_string());
+                    }
+                    self.advance(); // Skip DO
+                    
+                    let mut case_body = Vec::new();
+                    while self.current_token != Token::Case 
+                        && self.current_token != Token::Default 
+                        && self.current_token != Token::End {
+                        
+                        match self.current_token {
+                            Token::EOF => return Err("Expected CASE, DEFAULT, or END in SWITCH".to_string()),
+                            Token::Intent => case_body.push(self.parse_intent_declaration()?),
+                            Token::Manifest => case_body.push(self.parse_manifest_call()?),
+                            Token::Calculate => case_body.push(self.parse_calculate()?),
+                            Token::Store => case_body.push(self.parse_store()?),
+                            Token::Combine => case_body.push(self.parse_combine()?),
+                            Token::Repeat => case_body.push(self.parse_repeat()?),
+                            Token::If => case_body.push(self.parse_if()?),
+                            Token::Print => case_body.push(self.parse_print()?),
+                            Token::While => case_body.push(self.parse_while()?),
+                            Token::Increment => case_body.push(self.parse_increment()?),
+                            Token::Decrement => case_body.push(self.parse_decrement()?),
+                            Token::For => case_body.push(self.parse_for()?),
+                            Token::Assert => case_body.push(self.parse_assert()?),
+                            Token::Switch => case_body.push(self.parse_switch()?),
+                            _ => {
+                                return Err(format!("Unexpected token in CASE body: {:?}", self.current_token));
+                            }
+                        }
+                    }
+                    
+                    cases.push((case_value, case_body));
+                }
+                Token::Default => {
+                    self.advance(); // Skip DEFAULT
+                    
+                    if self.current_token != Token::Do {
+                        return Err("Expected DO after DEFAULT".to_string());
+                    }
+                    self.advance(); // Skip DO
+                    
+                    let mut default_body = Vec::new();
+                    while self.current_token != Token::End {
+                        match self.current_token {
+                            Token::EOF => return Err("Expected END after DEFAULT".to_string()),
+                            Token::Intent => default_body.push(self.parse_intent_declaration()?),
+                            Token::Manifest => default_body.push(self.parse_manifest_call()?),
+                            Token::Calculate => default_body.push(self.parse_calculate()?),
+                            Token::Store => default_body.push(self.parse_store()?),
+                            Token::Combine => default_body.push(self.parse_combine()?),
+                            Token::Repeat => default_body.push(self.parse_repeat()?),
+                            Token::If => default_body.push(self.parse_if()?),
+                            Token::Print => default_body.push(self.parse_print()?),
+                            Token::While => default_body.push(self.parse_while()?),
+                            Token::Increment => default_body.push(self.parse_increment()?),
+                            Token::Decrement => default_body.push(self.parse_decrement()?),
+                            Token::For => default_body.push(self.parse_for()?),
+                            Token::Assert => default_body.push(self.parse_assert()?),
+                            Token::Switch => default_body.push(self.parse_switch()?),
+                            _ => {
+                                return Err(format!("Unexpected token in DEFAULT body: {:?}", self.current_token));
+                            }
+                        }
+                    }
+                    
+                    default_case = Some(default_body);
+                    break;
+                }
+                _ => {
+                    return Err(format!("Expected CASE or DEFAULT in SWITCH: {:?}", self.current_token));
+                }
+            }
+        }
+        
+        if self.current_token != Token::End {
+            return Err("Expected END to close SWITCH".to_string());
+        }
+        self.advance(); // Skip END
+        
+        Ok(Statement::Switch { expression, cases, default_case })
     }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {
