@@ -54,6 +54,10 @@ pub enum Token {
     Sort,
     Filter,
     Reverse,
+    Map,
+    Reduce,
+    Sum,
+    Join,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -304,6 +308,10 @@ impl Lexer {
                     "SORT" => Token::Sort,
                     "FILTER" => Token::Filter,
                     "REVERSE" => Token::Reverse,
+                    "MAP" => Token::Map,
+                    "REDUCE" => Token::Reduce,
+                    "SUM" => Token::Sum,
+                    "JOIN" => Token::Join,
                     _ => Token::Identifier(identifier),
                 }
             }

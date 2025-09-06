@@ -135,6 +135,20 @@ pub enum Statement {
     ArrayReverse {
         array_name: String,
     },
+    ArrayMap {
+        array_name: String,
+        expression: Expression,
+        result_array: String,
+    },
+    ArraySum {
+        array_name: String,
+        result_name: String,
+    },
+    ArrayJoin {
+        array_name: String,
+        separator: String,
+        result_name: String,
+    },
 }
 
 pub struct Parser {
@@ -254,6 +268,15 @@ impl Parser {
                 }
                 Token::Reverse => {
                     statements.push(self.parse_array_reverse()?);
+                }
+                Token::Map => {
+                    statements.push(self.parse_array_map()?);
+                }
+                Token::Sum => {
+                    statements.push(self.parse_array_sum()?);
+                }
+                Token::Join => {
+                    statements.push(self.parse_array_join()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -1441,5 +1464,74 @@ impl Parser {
         self.advance();
         
         Ok(Statement::ArrayReverse { array_name })
+    }
+
+    fn parse_array_map(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip MAP
+        
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after MAP"));
+        };
+        self.advance();
+        
+        let expression = self.parse_expression()?;
+        
+        let result_array = if let Token::Identifier(result_name) = &self.current_token {
+            result_name.clone()
+        } else {
+            return Err(format!("Expected result array name for MAP"));
+        };
+        self.advance();
+        
+        Ok(Statement::ArrayMap { array_name, expression, result_array })
+    }
+
+    fn parse_array_sum(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip SUM
+        
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after SUM"));
+        };
+        self.advance();
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for SUM"));
+        };
+        self.advance();
+        
+        Ok(Statement::ArraySum { array_name, result_name })
+    }
+
+    fn parse_array_join(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip JOIN
+        
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after JOIN"));
+        };
+        self.advance();
+        
+        let separator = if let Token::StringLiteral(sep) = &self.current_token {
+            sep.clone()
+        } else {
+            return Err(format!("Expected separator string for JOIN"));
+        };
+        self.advance();
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for JOIN"));
+        };
+        self.advance();
+        
+        Ok(Statement::ArrayJoin { array_name, separator, result_name })
     }
 }

@@ -447,6 +447,64 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
+                Statement::ArrayMap { array_name, expression, result_array } => {
+                    if let Some(source_array) = self.arrays.get(&array_name).cloned() {
+                        let mut mapped_array = Vec::new();
+                        
+                        for (index, &value) in source_array.iter().enumerate() {
+                            // Set temporary variables
+                            let old_item_value = self.variables.get("item").copied();
+                            let old_index_value = self.variables.get("index").copied();
+                            
+                            self.variables.insert("item".to_string(), value);
+                            self.variables.insert("index".to_string(), index as f64);
+                            
+                            // Evaluate expression
+                            let mapped_value = self.evaluate_expression(&expression)?;
+                            mapped_array.push(mapped_value);
+                            
+                            // Restore old values
+                            if let Some(old_val) = old_item_value {
+                                self.variables.insert("item".to_string(), old_val);
+                            } else {
+                                self.variables.remove("item");
+                            }
+                            if let Some(old_val) = old_index_value {
+                                self.variables.insert("index".to_string(), old_val);
+                            } else {
+                                self.variables.remove("index");
+                            }
+                        }
+                        
+                        self.arrays.insert(result_array.clone(), mapped_array);
+                        println!("Mapped {} into {} with {} elements", 
+                            array_name, result_array, 
+                            self.arrays.get(&result_array).unwrap().len());
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::ArraySum { array_name, result_name } => {
+                    if let Some(array) = self.arrays.get(&array_name) {
+                        let sum: f64 = array.iter().sum();
+                        self.variables.insert(result_name.clone(), sum);
+                        println!("Sum of array '{}' is {}", array_name, sum);
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::ArrayJoin { array_name, separator, result_name } => {
+                    if let Some(array) = self.arrays.get(&array_name) {
+                        let joined = array.iter()
+                            .map(|n| n.to_string())
+                            .collect::<Vec<_>>()
+                            .join(&separator);
+                        self.intents.insert(result_name.clone(), joined.clone());
+                        println!("Joined array '{}' into string: {}", array_name, joined);
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
             }
         }
         Ok(())

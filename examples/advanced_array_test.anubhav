@@ -1,0 +1,54 @@
+# Testing advanced array operations
+PRINT "Testing advanced array operations"
+
+# Create and populate an array
+ARRAY numbers
+PUSH numbers 1
+PUSH numbers 2
+PUSH numbers 3
+PUSH numbers 4
+PUSH numbers 5
+
+# Test MAP - square each element
+PRINT "=== MAP operation (squaring) ==="
+MAP numbers RECALL item * RECALL item squared
+GET squared 0 sq0
+GET squared 1 sq1
+GET squared 2 sq2
+GET squared 3 sq3
+GET squared 4 sq4
+PRINT "Original: 1 2 3 4 5"
+PRINT "Squared:" sq0 sq1 sq2 sq3 sq4
+
+# Test SUM
+PRINT "=== SUM operation ==="
+SUM numbers total
+PRINT "Sum of numbers:" total
+
+SUM squared squared_total
+PRINT "Sum of squared:" squared_total
+
+# Test JOIN
+PRINT "=== JOIN operation ==="
+JOIN numbers ", " comma_separated
+PRINT "Joined with commas:" comma_separated
+
+JOIN numbers " -> " arrow_separated
+PRINT "Joined with arrows:" arrow_separated
+
+# Test combination of operations
+PRINT "=== Combined operations ==="
+ARRAY data
+PUSH data 10
+PUSH data 20
+PUSH data 30
+
+# Filter > 15, then map * 2
+FILTER data RECALL item > 15 filtered
+MAP filtered RECALL item * 2 doubled
+
+GET doubled 0 d0
+GET doubled 1 d1
+PRINT "Filtered > 15 then doubled:" d0 d1
+
+PRINT "Advanced array operations test completed!"
