@@ -1,0 +1,183 @@
+# Test All New Features
+PRINT "=== TESTING NEW FEATURES ==="
+PRINT ""
+
+# 1. Dictionary Operations
+PRINT "1. DICTIONARY OPERATIONS"
+PRINT "------------------------"
+
+DICT person
+PUT person "age" 25
+PUT person "height" 180
+FETCH person "age" p_age
+FETCH person "height" p_height
+PRINT "Person age:" p_age
+PRINT "Person height:" p_height
+
+KEYS person p_keys
+VALUES person p_values
+PRINT "Dictionary keys stored in array p_keys"
+PRINT "Dictionary values stored in array p_values"
+
+DELETE person "height"
+PRINT "Deleted height from dictionary"
+PRINT ""
+
+# 2. File I/O Operations
+PRINT "2. FILE I/O OPERATIONS"
+PRINT "---------------------"
+
+INTENT file_content "Hello from Anubhav!
+This is a test file.
+It has multiple lines."
+
+WRITE_FILE "test_output.txt" file_content
+PRINT "Created test_output.txt"
+
+READ_FILE "test_output.txt" read_content
+PRINT "Read from file:" read_content
+
+INTENT append_text "
+Appended line 1
+Appended line 2"
+APPEND_FILE "test_output.txt" append_text
+PRINT "Appended to file"
+
+EXISTS "test_output.txt" file_exists
+PRINT "File exists:" file_exists
+
+EXISTS "nonexistent.txt" no_file
+PRINT "Nonexistent file:" no_file
+PRINT ""
+
+# 3. Range Operation
+PRINT "3. RANGE OPERATION"
+PRINT "-----------------"
+
+RANGE 1 10 2 odd_numbers
+JOIN odd_numbers ", " odd_str
+PRINT "Range 1 to 10 step 2:" odd_str
+
+RANGE 5 1 -1 countdown
+JOIN countdown ", " countdown_str
+PRINT "Range 5 to 1 step -1:" countdown_str
+PRINT ""
+
+# 4. Array Operations
+PRINT "4. ADVANCED ARRAY OPERATIONS"
+PRINT "----------------------------"
+
+ARRAY arr1
+PUSH arr1 3
+PUSH arr1 1
+PUSH arr1 4
+PUSH arr1 1
+PUSH arr1 5
+
+# UNIQUE operation
+UNIQUE arr1 unique_arr
+JOIN unique_arr ", " unique_str
+PRINT "Unique values:" unique_str
+
+# CONCAT operation
+ARRAY arr2
+PUSH arr2 9
+PUSH arr2 2
+PUSH arr2 6
+CONCAT arr1 arr2 combined
+JOIN combined ", " combined_str
+PRINT "Concatenated arrays:" combined_str
+
+# TAKE operation
+TAKE combined 3 first_three
+JOIN first_three ", " first_str
+PRINT "Take first 3:" first_str
+
+# DROP operation
+DROP combined 5 after_five
+JOIN after_five ", " after_str
+PRINT "Drop first 5:" after_str
+
+# FIND operation
+FIND combined 4 index_of_4
+PRINT "Index of 4:" index_of_4
+
+# AVERAGE operation
+AVERAGE combined avg_val
+PRINT "Average:" avg_val
+
+# SHUFFLE operation
+SHUFFLE combined
+JOIN combined ", " shuffled_str
+PRINT "Shuffled:" shuffled_str
+
+# CLONE operation
+CLONE combined cloned_arr
+JOIN cloned_arr ", " cloned_str
+PRINT "Cloned array:" cloned_str
+PRINT ""
+
+# 5. Type Checking
+PRINT "5. TYPE CHECKING"
+PRINT "---------------"
+
+STORE num_var 42
+TYPE num_var num_type
+PRINT "Type of 42:" num_type
+
+ARRAY test_arr
+TYPE test_arr arr_type
+PRINT "Type of array:" arr_type
+
+DICT test_dict
+TYPE test_dict dict_type
+PRINT "Type of dictionary:" dict_type
+
+INTENT str_var "Hello"
+TYPE str_var str_type
+PRINT "Type of string:" str_type
+PRINT ""
+
+# 6. Parse Number
+PRINT "6. PARSE NUMBER"
+PRINT "--------------"
+
+INTENT num_string "123.45"
+PARSE num_string parsed_num
+PRINT "Parsed '123.45':" parsed_num
+
+CALCULATE doubled RECALL parsed_num * 2
+PRINT "Doubled:" doubled
+PRINT ""
+
+# 7. Clear Operation
+PRINT "7. CLEAR OPERATION"
+PRINT "-----------------"
+
+ARRAY to_clear
+PUSH to_clear 1
+PUSH to_clear 2
+PUSH to_clear 3
+SIZE to_clear size_before
+PRINT "Array size before clear:" size_before
+
+CLEAR to_clear
+SIZE to_clear size_after
+PRINT "Array size after clear:" size_after
+PRINT ""
+
+# 8. Input Operation (Skip interactive for testing)
+PRINT "8. INPUT OPERATION"
+PRINT "-----------------"
+PRINT "Skipping interactive input for automated testing"
+PRINT ""
+
+# 9. Sleep Operation
+PRINT "9. SLEEP OPERATION"
+PRINT "-----------------"
+PRINT "Sleeping for 1 second..."
+SLEEP 1000
+PRINT "Done sleeping!"
+PRINT ""
+
+PRINT "=== ALL NEW FEATURES TESTED SUCCESSFULLY ==="

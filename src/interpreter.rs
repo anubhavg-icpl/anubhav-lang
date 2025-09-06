@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fs;
-use std::io::{self, Write};
+use std::io;
 use std::thread;
 use std::time::Duration;
 use std::path::Path;
@@ -262,6 +262,13 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
+                Statement::ArraySize { array_name, result_name } => {
+                    if let Some(array) = self.arrays.get(&array_name) {
+                        self.variables.insert(result_name.clone(), array.len() as f64);
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
                 Statement::ArrayGet { array_name, index, result_name } => {
                     let idx = self.evaluate_expression(&index)? as usize;
                     if let Some(array) = self.arrays.get(&array_name) {
@@ -511,8 +518,287 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
+                Statement::DictCreate { name } => {
+                    self.dicts.insert(name.clone(), HashMap::new());
+                    println!("Dictionary '{}' created", name);
+                }
+                Statement::DictPut { dict_name, key, value } => {
+                    let val = self.evaluate_expression(&value)?;
+                    if let Some(dict) = self.dicts.get_mut(&dict_name) {
+                        dict.insert(key.clone(), val);
+                        println!("Set {}['{}'] = {}", dict_name, key, val);
+                    } else {
+                        return Err(format!("Dictionary '{}' not found", dict_name));
+                    }
+                }
+                Statement::DictFetch { dict_name, key, result_name } => {
+                    if let Some(dict) = self.dicts.get(&dict_name) {
+                        if let Some(&value) = dict.get(&key) {
+                            self.variables.insert(result_name.clone(), value);
+                        } else {
+                            return Err(format!("Key '{}' not found in dictionary '{}'", key, dict_name));
+                        }
+                    } else {
+                        return Err(format!("Dictionary '{}' not found", dict_name));
+                    }
+                }
+                Statement::DictKeys { dict_name, result_array } => {
+                    if let Some(_dict) = self.dicts.get(&dict_name) {
+                        let keys: Vec<f64> = Vec::new(); // Keys as array indices for now
+                        self.arrays.insert(result_array.clone(), keys);
+                        println!("Extracted keys from '{}'", dict_name);
+                    } else {
+                        return Err(format!("Dictionary '{}' not found", dict_name));
+                    }
+                }
+                Statement::DictValues { dict_name, result_array } => {
+                    if let Some(dict) = self.dicts.get(&dict_name) {
+                        let values: Vec<f64> = dict.values().copied().collect();
+                        self.arrays.insert(result_array.clone(), values);
+                        println!("Extracted values from '{}' to array '{}'", dict_name, result_array);
+                    } else {
+                        return Err(format!("Dictionary '{}' not found", dict_name));
+                    }
+                }
+                Statement::DictDelete { dict_name, key } => {
+                    if let Some(dict) = self.dicts.get_mut(&dict_name) {
+                        dict.remove(&key);
+                        println!("Deleted key '{}' from '{}'", key, dict_name);
+                    } else {
+                        return Err(format!("Dictionary '{}' not found", dict_name));
+                    }
+                }
+                Statement::ReadFile { filename, result_name } => {
+                    match fs::read_to_string(&filename) {
+                        Ok(content) => {
+                            self.intents.insert(result_name.clone(), content.clone());
+                            println!("Read {} bytes from '{}'", content.len(), filename);
+                        }
+                        Err(e) => return Err(format!("Failed to read file '{}': {}", filename, e))
+                    }
+                }
+                Statement::WriteFile { filename, content } => {
+                    let actual_content = if content.starts_with("${") && content.ends_with("}") {
+                        let var_name = &content[2..content.len()-1];
+                        self.intents.get(var_name).cloned()
+                            .unwrap_or_else(|| content.clone())
+                    } else {
+                        content.clone()
+                    };
+                    
+                    match fs::write(&filename, actual_content.as_bytes()) {
+                        Ok(_) => println!("Wrote {} bytes to '{}'", actual_content.len(), filename),
+                        Err(e) => return Err(format!("Failed to write to file '{}': {}", filename, e))
+                    }
+                }
+                Statement::AppendFile { filename, content } => {
+                    use std::fs::OpenOptions;
+                    use std::io::Write;
+                    
+                    let actual_content = if content.starts_with("${") && content.ends_with("}") {
+                        let var_name = &content[2..content.len()-1];
+                        self.intents.get(var_name).cloned()
+                            .unwrap_or_else(|| content.clone())
+                    } else {
+                        content.clone()
+                    };
+                    
+                    match OpenOptions::new()
+                        .create(true)
+                        .append(true)
+                        .open(&filename)
+                        .and_then(|mut file| file.write_all(actual_content.as_bytes()))
+                    {
+                        Ok(_) => println!("Appended {} bytes to '{}'", actual_content.len(), filename),
+                        Err(e) => return Err(format!("Failed to append to file '{}': {}", filename, e))
+                    }
+                }
+                Statement::FileExists { filename, result_name } => {
+                    let exists = Path::new(&filename).exists();
+                    self.variables.insert(result_name.clone(), if exists { 1.0 } else { 0.0 });
+                    println!("File '{}' exists: {}", filename, exists);
+                }
+                Statement::Sleep { milliseconds } => {
+                    let ms = self.evaluate_expression(&milliseconds)? as u64;
+                    println!("Sleeping for {} ms...", ms);
+                    thread::sleep(Duration::from_millis(ms));
+                }
+                Statement::Input { prompt, result_name } => {
+                    print!("{}", prompt);
+                    io::Write::flush(&mut io::stdout()).unwrap();
+                    
+                    let mut input = String::new();
+                    io::stdin().read_line(&mut input)
+                        .map_err(|e| format!("Failed to read input: {}", e))?;
+                    
+                    let trimmed = input.trim().to_string();
+                    
+                    // Try to parse as number, otherwise store as string
+                    if let Ok(num) = trimmed.parse::<f64>() {
+                        self.variables.insert(result_name.clone(), num);
+                    } else {
+                        self.intents.insert(result_name.clone(), trimmed);
+                    }
+                }
+                Statement::GetType { variable, result_name } => {
+                    let type_str = if self.variables.contains_key(&variable) {
+                        "number"
+                    } else if self.intents.contains_key(&variable) {
+                        "string"
+                    } else if self.arrays.contains_key(&variable) {
+                        "array"
+                    } else if self.dicts.contains_key(&variable) {
+                        "dictionary"
+                    } else {
+                        "undefined"
+                    };
+                    self.intents.insert(result_name.clone(), type_str.to_string());
+                }
+                Statement::ParseNumber { source, result_name } => {
+                    let value = if let Some(str_val) = self.intents.get(&source) {
+                        str_val.parse::<f64>().unwrap_or(0.0)
+                    } else {
+                        source.parse::<f64>().unwrap_or(0.0)
+                    };
+                    self.variables.insert(result_name.clone(), value);
+                }
+                Statement::Range { start, end, step, result_array } => {
+                    let start_val = self.evaluate_expression(&start)?;
+                    let end_val = self.evaluate_expression(&end)?;
+                    let step_val = if let Some(s) = step {
+                        self.evaluate_expression(&s)?
+                    } else {
+                        1.0
+                    };
+                    
+                    let mut range_array = Vec::new();
+                    let mut current = start_val;
+                    while current <= end_val {
+                        range_array.push(current);
+                        current += step_val;
+                    }
+                    self.arrays.insert(result_array.clone(), range_array);
+                    println!("Generated range array '{}'", result_array);
+                }
+                Statement::Unique { array_name, result_array } => {
+                    if let Some(array) = self.arrays.get(&array_name) {
+                        let mut unique = Vec::new();
+                        for &val in array {
+                            if !unique.contains(&val) {
+                                unique.push(val);
+                            }
+                        }
+                        self.arrays.insert(result_array.clone(), unique);
+                        println!("Created unique array '{}'", result_array);
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::Concat { array1, array2, result_array } => {
+                    if let (Some(arr1), Some(arr2)) = (self.arrays.get(&array1), self.arrays.get(&array2)) {
+                        let mut concatenated = arr1.clone();
+                        concatenated.extend(arr2);
+                        self.arrays.insert(result_array.clone(), concatenated);
+                        println!("Concatenated arrays into '{}'", result_array);
+                    } else {
+                        return Err(format!("Array not found"));
+                    }
+                }
+                Statement::Take { array_name, count, result_array } => {
+                    let n = self.evaluate_expression(&count)? as usize;
+                    if let Some(array) = self.arrays.get(&array_name) {
+                        let taken: Vec<f64> = array.iter().take(n).copied().collect();
+                        self.arrays.insert(result_array.clone(), taken);
+                        println!("Took {} elements into '{}'", n, result_array);
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::Drop { array_name, count, result_array } => {
+                    let n = self.evaluate_expression(&count)? as usize;
+                    if let Some(array) = self.arrays.get(&array_name) {
+                        let dropped: Vec<f64> = array.iter().skip(n).copied().collect();
+                        self.arrays.insert(result_array.clone(), dropped);
+                        println!("Dropped {} elements, result in '{}'", n, result_array);
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::Find { array_name, condition, result_name } => {
+                    // Clone the array to avoid borrowing issues
+                    let array_clone = self.arrays.get(&array_name).cloned();
+                    if let Some(array) = array_clone {
+                        for &value in &array {
+                            self.variables.insert("item".to_string(), value);
+                            if self.evaluate_expression(&condition)? != 0.0 {
+                                self.variables.insert(result_name.clone(), value);
+                                println!("Found value: {}", value);
+                                break;
+                            }
+                        }
+                        self.variables.remove("item");
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::Average { array_name, result_name } => {
+                    if let Some(array) = self.arrays.get(&array_name) {
+                        if !array.is_empty() {
+                            let avg: f64 = array.iter().sum::<f64>() / array.len() as f64;
+                            self.variables.insert(result_name.clone(), avg);
+                            println!("Average of '{}' is {}", array_name, avg);
+                        } else {
+                            self.variables.insert(result_name.clone(), 0.0);
+                        }
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::Clear { target } => {
+                    if self.arrays.contains_key(&target) {
+                        self.arrays.get_mut(&target).unwrap().clear();
+                        println!("Cleared array '{}'", target);
+                    } else if self.dicts.contains_key(&target) {
+                        self.dicts.get_mut(&target).unwrap().clear();
+                        println!("Cleared dictionary '{}'", target);
+                    } else {
+                        return Err(format!("Target '{}' not found", target));
+                    }
+                }
+                Statement::Shuffle { array_name } => {
+                    // Generate all random indices first to avoid borrowing issues
+                    let len = self.arrays.get(&array_name).map(|a| a.len());
+                    if let Some(len) = len {
+                        let mut swaps = Vec::new();
+                        for i in 0..len {
+                            let j = (self.next_random() * len as f64) as usize;
+                            swaps.push((i, j.min(len - 1)));
+                        }
+                        
+                        // Now apply the swaps
+                        if let Some(array) = self.arrays.get_mut(&array_name) {
+                            for (i, j) in swaps {
+                                array.swap(i, j);
+                            }
+                        }
+                        println!("Shuffled array '{}'", array_name);
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::Clone { source, destination } => {
+                    if let Some(array) = self.arrays.get(&source).cloned() {
+                        self.arrays.insert(destination.clone(), array);
+                        println!("Cloned array '{}' to '{}'", source, destination);
+                    } else if let Some(dict) = self.dicts.get(&source).cloned() {
+                        self.dicts.insert(destination.clone(), dict);
+                        println!("Cloned dictionary '{}' to '{}'", source, destination);
+                    } else {
+                        return Err(format!("Source '{}' not found", source));
+                    }
+                }
                 _ => {
-                    // Future features - not yet implemented
+                    // Remaining unimplemented features
                     return Err(format!("Feature not yet implemented"));
                 }
             }

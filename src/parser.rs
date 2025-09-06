@@ -91,6 +91,10 @@ pub enum Statement {
         array_name: String,
         result_name: String,
     },
+    ArraySize {
+        array_name: String,
+        result_name: String,
+    },
     ArrayGet {
         array_name: String,
         index: Expression,
@@ -368,6 +372,9 @@ impl Parser {
                 Token::Set => {
                     statements.push(self.parse_array_set()?);
                 }
+                Token::Size => {
+                    statements.push(self.parse_array_size()?);
+                }
                 Token::Import => {
                     statements.push(self.parse_import()?);
                 }
@@ -426,6 +433,36 @@ impl Parser {
                 }
                 Token::Delete => {
                     statements.push(self.parse_dict_delete()?);
+                }
+                Token::RangeOp => {
+                    statements.push(self.parse_range()?);
+                }
+                Token::Unique => {
+                    statements.push(self.parse_unique()?);
+                }
+                Token::Concat => {
+                    statements.push(self.parse_concat()?);
+                }
+                Token::TakeOp => {
+                    statements.push(self.parse_take()?);
+                }
+                Token::DropOp => {
+                    statements.push(self.parse_drop()?);
+                }
+                Token::FindOp => {
+                    statements.push(self.parse_find()?);
+                }
+                Token::AverageOp => {
+                    statements.push(self.parse_average()?);
+                }
+                Token::ClearOp => {
+                    statements.push(self.parse_clear()?);
+                }
+                Token::Shuffle => {
+                    statements.push(self.parse_shuffle()?);
+                }
+                Token::CloneOp => {
+                    statements.push(self.parse_clone()?);
                 }
                 Token::ReadFile => {
                     statements.push(self.parse_read_file()?);
@@ -1123,6 +1160,26 @@ impl Parser {
         Ok(Statement::ArrayPop { array_name, result_name })
     }
     
+    fn parse_array_size(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip SIZE
+        
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after SIZE"));
+        };
+        self.advance();
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for SIZE"));
+        };
+        self.advance();
+        
+        Ok(Statement::ArraySize { array_name, result_name })
+    }
+
     fn parse_array_get(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip GET
         
@@ -1835,6 +1892,198 @@ impl Parser {
         
         Ok(Statement::DictDelete { dict_name, key })
     }
+
+    fn parse_range(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip RANGE
+        let start = self.parse_expression()?;
+        let end = self.parse_expression()?;
+        
+        let step = if matches!(self.current_token, Token::Number(_) | Token::Minus) {
+            Some(self.parse_expression()?)
+        } else {
+            None
+        };
+        
+        let result_array = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result array name for RANGE"));
+        };
+        self.advance();
+        
+        Ok(Statement::Range { start, end, step, result_array })
+    }
+
+    fn parse_unique(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip UNIQUE
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after UNIQUE"));
+        };
+        self.advance();
+        
+        let result_array = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result array name for UNIQUE"));
+        };
+        self.advance();
+        
+        Ok(Statement::Unique { array_name, result_array })
+    }
+
+    fn parse_concat(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip CONCAT
+        let array1 = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected first array name after CONCAT"));
+        };
+        self.advance();
+        
+        let array2 = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected second array name for CONCAT"));
+        };
+        self.advance();
+        
+        let result_array = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result array name for CONCAT"));
+        };
+        self.advance();
+        
+        Ok(Statement::Concat { array1, array2, result_array })
+    }
+
+    fn parse_take(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip TAKE
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after TAKE"));
+        };
+        self.advance();
+        
+        let count = self.parse_expression()?;
+        
+        let result_array = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result array name for TAKE"));
+        };
+        self.advance();
+        
+        Ok(Statement::Take { array_name, count, result_array })
+    }
+
+    fn parse_drop(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip DROP
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after DROP"));
+        };
+        self.advance();
+        
+        let count = self.parse_expression()?;
+        
+        let result_array = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result array name for DROP"));
+        };
+        self.advance();
+        
+        Ok(Statement::Drop { array_name, count, result_array })
+    }
+
+    fn parse_find(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip FIND
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after FIND"));
+        };
+        self.advance();
+        
+        let condition = self.parse_expression()?;
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for FIND"));
+        };
+        self.advance();
+        
+        Ok(Statement::Find { array_name, condition, result_name })
+    }
+
+    fn parse_average(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip AVERAGE
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after AVERAGE"));
+        };
+        self.advance();
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected result variable name for AVERAGE"));
+        };
+        self.advance();
+        
+        Ok(Statement::Average { array_name, result_name })
+    }
+
+    fn parse_clear(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip CLEAR
+        let target = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected target name after CLEAR"));
+        };
+        self.advance();
+        
+        Ok(Statement::Clear { target })
+    }
+
+    fn parse_shuffle(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip SHUFFLE
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after SHUFFLE"));
+        };
+        self.advance();
+        
+        Ok(Statement::Shuffle { array_name })
+    }
+
+    fn parse_clone(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip CLONE
+        let source = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected source name after CLONE"));
+        };
+        self.advance();
+        
+        let destination = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected destination name for CLONE"));
+        };
+        self.advance();
+        
+        Ok(Statement::Clone { source, destination })
+    }
+
 
     fn parse_read_file(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip READ_FILE
