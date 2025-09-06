@@ -62,6 +62,10 @@ pub enum Statement {
         step: Option<Expression>,
         body: Vec<Statement>,
     },
+    Assert {
+        condition: Expression,
+        message: Option<String>,
+    },
 }
 
 pub struct Parser {
@@ -122,6 +126,9 @@ impl Parser {
                 }
                 Token::For => {
                     statements.push(self.parse_for()?);
+                }
+                Token::Assert => {
+                    statements.push(self.parse_assert()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -485,6 +492,26 @@ impl Parser {
         self.advance(); // Skip END
         
         Ok(Statement::For { variable, start, end, step, body })
+    }
+    
+    fn parse_assert(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip ASSERT
+        
+        let condition = self.parse_expression()?;
+        
+        let message = if matches!(self.current_token, Token::StringLiteral(_)) {
+            if let Token::StringLiteral(msg) = &self.current_token {
+                let msg = msg.clone();
+                self.advance();
+                Some(msg)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        
+        Ok(Statement::Assert { condition, message })
     }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {

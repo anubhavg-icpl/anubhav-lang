@@ -23,6 +23,7 @@ pub enum Token {
     Step,
     Min,
     Max,
+    Assert,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -242,6 +243,7 @@ impl Lexer {
                     "STEP" => Token::Step,
                     "MIN" => Token::Min,
                     "MAX" => Token::Max,
+                    "ASSERT" => Token::Assert,
                     _ => Token::Identifier(identifier),
                 }
             }

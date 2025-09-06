@@ -1,0 +1,30 @@
+# ASSERT statement examples for testing
+STORE x 10
+STORE y 5
+
+# Basic assertions
+ASSERT RECALL x == 10 "x should be 10"
+ASSERT RECALL y == 5 "y should be 5" 
+ASSERT RECALL x > RECALL y "x should be greater than y"
+
+# Mathematical assertions
+CALCULATE sum RECALL x + RECALL y
+ASSERT RECALL sum == 15 "sum should be 15"
+
+CALCULATE product RECALL x * RECALL y
+ASSERT RECALL product == 50 "product should be 50"
+
+# Testing MIN/MAX with assertions
+CALCULATE minimum MIN(RECALL x RECALL y)
+CALCULATE maximum MAX(RECALL x RECALL y)
+
+ASSERT RECALL minimum == 5 "minimum should be 5"
+ASSERT RECALL maximum == 10 "maximum should be 10"
+
+PRINT "All assertions passed successfully!"
+
+# This assertion should pass
+ASSERT 1 == 1 "Basic equality should work"
+
+# This assertion will fail if uncommented:
+# ASSERT 1 == 2 "This will fail"

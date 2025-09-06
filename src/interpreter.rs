@@ -146,6 +146,18 @@ impl Interpreter {
                         }
                     }
                 }
+                Statement::Assert { condition, message } => {
+                    let result = self.evaluate_expression(&condition)?;
+                    if result == 0.0 {
+                        let error_msg = if let Some(msg) = message {
+                            format!("Assertion failed: {}", msg)
+                        } else {
+                            "Assertion failed".to_string()
+                        };
+                        return Err(error_msg);
+                    }
+                    println!("✓ Assertion passed");
+                }
             }
         }
         Ok(())
