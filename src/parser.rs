@@ -709,7 +709,7 @@ impl Parser {
                 self.advance();
                 Ok(Expression::Number(num))
             }
-            Token::Min | Token::Max => {
+            Token::Min | Token::Max | Token::Floor | Token::Ceil | Token::Round => {
                 let op = self.current_token.clone();
                 self.advance();
                 
@@ -718,19 +718,40 @@ impl Parser {
                 }
                 self.advance();
                 
-                let first_arg = self.parse_primary()?;
-                let second_arg = self.parse_primary()?;
-                
-                if self.current_token != Token::RightParen {
-                    return Err(format!("Expected ) after MIN/MAX arguments"));
+                match op {
+                    Token::Min | Token::Max => {
+                        // Two-argument functions
+                        let first_arg = self.parse_primary()?;
+                        let second_arg = self.parse_primary()?;
+                        
+                        if self.current_token != Token::RightParen {
+                            return Err(format!("Expected ) after function arguments"));
+                        }
+                        self.advance();
+                        
+                        Ok(Expression::BinaryOp {
+                            left: Box::new(first_arg),
+                            operator: op,
+                            right: Box::new(second_arg),
+                        })
+                    }
+                    Token::Floor | Token::Ceil | Token::Round => {
+                        // Single-argument functions
+                        let arg = self.parse_primary()?;
+                        
+                        if self.current_token != Token::RightParen {
+                            return Err(format!("Expected ) after function argument"));
+                        }
+                        self.advance();
+                        
+                        Ok(Expression::BinaryOp {
+                            left: Box::new(Expression::Number(0.0)), // Dummy left operand
+                            operator: op,
+                            right: Box::new(arg),
+                        })
+                    }
+                    _ => unreachable!()
                 }
-                self.advance();
-                
-                Ok(Expression::BinaryOp {
-                    left: Box::new(first_arg),
-                    operator: op,
-                    right: Box::new(second_arg),
-                })
             }
             Token::Recall => {
                 self.advance(); // Skip RECALL

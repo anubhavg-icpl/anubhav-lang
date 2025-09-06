@@ -220,6 +220,9 @@ impl Interpreter {
                     }
                     Token::Min => Ok(left_val.min(right_val)),
                     Token::Max => Ok(left_val.max(right_val)),
+                    Token::Floor => Ok(right_val.floor()),
+                    Token::Ceil => Ok(right_val.ceil()),
+                    Token::Round => Ok(right_val.round()),
                     _ => Err(format!("Invalid operator: {:?}", operator))
                 }
             }

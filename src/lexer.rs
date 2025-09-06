@@ -26,6 +26,9 @@ pub enum Token {
     Assert,
     Try,
     Catch,
+    Floor,
+    Ceil,
+    Round,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -248,6 +251,9 @@ impl Lexer {
                     "ASSERT" => Token::Assert,
                     "TRY" => Token::Try,
                     "CATCH" => Token::Catch,
+                    "FLOOR" => Token::Floor,
+                    "CEIL" => Token::Ceil,
+                    "ROUND" => Token::Round,
                     _ => Token::Identifier(identifier),
                 }
             }

@@ -1,0 +1,51 @@
+# FLOOR, CEIL, and ROUND math functions
+STORE test_val 3.7
+
+PRINT "Testing math functions with" test_val
+
+# Test FLOOR function
+CALCULATE floor_result FLOOR(RECALL test_val)
+PRINT "FLOOR(3.7) =" floor_result
+
+# Test CEIL function  
+CALCULATE ceil_result CEIL(RECALL test_val)
+PRINT "CEIL(3.7) =" ceil_result
+
+# Test ROUND function
+CALCULATE round_result ROUND(RECALL test_val)
+PRINT "ROUND(3.7) =" round_result
+
+# Test with negative numbers
+STORE neg_val -2.3
+PRINT "Testing with negative number" neg_val
+
+CALCULATE neg_floor FLOOR(RECALL neg_val)
+CALCULATE neg_ceil CEIL(RECALL neg_val)
+CALCULATE neg_round ROUND(RECALL neg_val)
+
+PRINT "FLOOR(-2.3) =" neg_floor
+PRINT "CEIL(-2.3) =" neg_ceil  
+PRINT "ROUND(-2.3) =" neg_round
+
+# Test with different values
+STORE val1 5.1
+STORE val2 5.9
+STORE val3 5.5
+
+CALCULATE round1 ROUND(RECALL val1)
+CALCULATE round2 ROUND(RECALL val2)
+CALCULATE round3 ROUND(RECALL val3)
+
+PRINT "ROUND(5.1) =" round1
+PRINT "ROUND(5.9) =" round2
+PRINT "ROUND(5.5) =" round3
+
+# Combine with other operations
+CALCULATE sum RECALL val1 + RECALL val2
+CALCULATE complex_calc ROUND(RECALL sum)
+PRINT "ROUND(5.1 + 5.9) =" complex_calc
+
+CALCULATE floor1 FLOOR(RECALL test_val)
+CALCULATE floor2 FLOOR(RECALL neg_val)
+CALCULATE min_floor MIN(RECALL floor1 RECALL floor2)
+PRINT "MIN(FLOOR(3.7), FLOOR(-2.3)) =" min_floor
