@@ -35,6 +35,7 @@ pub enum Token {
     GreaterEqual,
     And,
     Or,
+    Not,
     EOF,
 }
 
@@ -224,6 +225,7 @@ impl Lexer {
                     "ELSE" => Token::Else,
                     "AND" => Token::And,
                     "OR" => Token::Or,
+                    "NOT" => Token::Not,
                     "PRINT" => Token::Print,
                     "WHILE" => Token::While,
                     _ => Token::Identifier(identifier),

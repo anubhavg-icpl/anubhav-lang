@@ -488,6 +488,17 @@ impl Parser {
     }
 
     fn parse_primary(&mut self) -> Result<Expression, String> {
+        // Handle NOT operator
+        if self.current_token == Token::Not {
+            self.advance();
+            let expr = self.parse_primary()?;
+            return Ok(Expression::BinaryOp {
+                left: Box::new(Expression::Number(0.0)),
+                operator: Token::Not,
+                right: Box::new(expr),
+            });
+        }
+        
         match &self.current_token {
             Token::Number(n) => {
                 let num = *n;

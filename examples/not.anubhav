@@ -1,0 +1,32 @@
+# NOT logical operator examples
+STORE is_true 1
+STORE is_false 0
+
+CALCULATE not_true NOT RECALL is_true
+CALCULATE not_false NOT RECALL is_false
+
+PRINT "NOT true =" not_true
+PRINT "NOT false =" not_false
+
+# Complex logical expressions with NOT
+STORE x 10
+STORE y 20
+
+IF NOT (RECALL x > RECALL y) THEN
+    PRINT "x is not greater than y"
+END
+
+# Checking conditions with NOT
+STORE logged_in 0
+
+IF NOT RECALL logged_in THEN
+    PRINT "Please log in first"
+END
+
+# NOT with AND/OR
+STORE condition1 1
+STORE condition2 0
+
+IF RECALL condition1 AND NOT RECALL condition2 THEN
+    PRINT "Condition 1 is true AND condition 2 is false"
+END
