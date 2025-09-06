@@ -1,0 +1,7 @@
+INTENT welcome "Welcome to Anubhav Language!"
+INTENT info "This is a new programming language"
+INTENT goodbye "Thank you for using Anubhav!"
+
+MANIFEST welcome
+MANIFEST info
+MANIFEST goodbye
