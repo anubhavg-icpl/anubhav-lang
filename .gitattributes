@@ -1,3 +1,8 @@
+# Linguist overrides for GitHub language detection
 *.anubhav linguist-language=Anubhav
-*.anubhav linguist-text
-# *.anubhav linguist-language=Rust
+*.anubhav linguist-detectable=true
+*.anubhav text
+
+# Mark Anubhav files as documentation or vendored if needed
+# examples/*.anubhav linguist-documentation=false
+# tests/*.anubhav linguist-vendored=false

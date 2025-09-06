@@ -8,20 +8,20 @@ A feature-rich, intention-based educational programming language with 100+ opera
 
 </div>
 
-## 🎯 Overview
+## Overview
 
 Anubhav is a unique intention-based programming language where you declare what you intend to do, then manifest it. Built with Rust for performance and reliability, it provides an intuitive syntax perfect for educational purposes while maintaining the power needed for complex operations.
 
 ### Key Features
-- 🎭 **Intention-based paradigm** - Declare intentions, then manifest them
-- 📊 **100+ built-in operations** - Comprehensive standard library
-- 🔄 **Full recursion support** - With proper call stack management
-- 📦 **Module system** - Import/export capabilities
-- 🛡️ **Error handling** - Try/catch blocks for robust programs
-- 🎨 **String interpolation** - Built-in template syntax
-- 📈 **Advanced data structures** - Arrays, dictionaries, functions
+- **Intention-based paradigm** - Declare intentions, then manifest them
+- **100+ built-in operations** - Comprehensive standard library
+- **Full recursion support** - With proper call stack management
+- **Module system** - Import/export capabilities
+- **Error handling** - Try/catch blocks for robust programs
+- **String interpolation** - Built-in template syntax
+- **Advanced data structures** - Arrays, dictionaries, functions
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -58,7 +58,7 @@ MANIFEST greeting
 PRINT "Hello, World!"
 ```
 
-## 📖 Language Guide
+## Language Guide
 
 ### Core Concepts
 
@@ -286,7 +286,7 @@ IF RECALL file_exists THEN
 END
 ```
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 anubhav-lang/
@@ -316,7 +316,7 @@ anubhav-lang/
 └── benchmarks/          # Performance tests
 ```
 
-## 🎯 Complete Feature List
+## Complete Feature List
 
 ### Categories
 - **Core Operations**: 15+ basic language features
@@ -331,7 +331,7 @@ anubhav-lang/
 
 For a complete list of all 100+ operations, see [docs/FEATURES.md](docs/FEATURES.md).
 
-## 🧪 Examples
+## Examples
 
 ### Running Examples
 
@@ -357,7 +357,7 @@ The `examples/` directory contains:
 - **advanced/**: Complex programs showing advanced capabilities
 - **showcase/**: Comprehensive demonstrations of all features
 
-## 🛠️ Building from Source
+## Building from Source
 
 ### Prerequisites
 - Rust 1.70+ (2024 edition)
@@ -389,7 +389,7 @@ The provided build script handles everything:
 ./scripts/build.sh
 ```
 
-## 🧩 Integration
+## Integration
 
 ### As a Library
 
@@ -413,7 +413,7 @@ fn main() {
 }
 ```
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -423,17 +423,17 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👤 Author
+## Author
 
 **Anubhav G**
 - GitHub: [@anubhavg-icpl](https://github.com/anubhavg-icpl)
 - Repository: [anubhav-lang](https://github.com/anubhavg-icpl/anubhav-lang)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Built with Rust for performance and safety
 - Inspired by educational programming languages
@@ -442,5 +442,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-Made with ❤️ for the programming education community
+Made for the programming education community
 </div>
