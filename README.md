@@ -1,5 +1,3 @@
-# Anubhav Programming Language
-
 <div align="center">
 
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -408,7 +406,7 @@ use anubhav_lang::{Interpreter, lexer, parser};
 fn main() {
     let mut interpreter = Interpreter::new();
     let source = "PRINT \"Hello from Rust!\"";
-    
+
     let tokens = lexer::tokenize(source);
     let ast = parser::parse(tokens);
     interpreter.execute(ast);
