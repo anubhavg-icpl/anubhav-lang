@@ -184,7 +184,7 @@ impl Lexer {
     fn read_string(&mut self) -> String {
         let mut result = String::new();
         self.advance(); // Skip opening quote
-        
+
         while let Some(ch) = self.current_char {
             if ch == '"' {
                 self.advance(); // Skip closing quote
@@ -198,7 +198,7 @@ impl Lexer {
 
     fn read_identifier(&mut self) -> String {
         let mut result = String::new();
-        
+
         while let Some(ch) = self.current_char {
             if ch.is_alphanumeric() || ch == '_' {
                 result.push(ch);
@@ -212,7 +212,7 @@ impl Lexer {
 
     fn read_number(&mut self) -> f64 {
         let mut result = String::new();
-        
+
         while let Some(ch) = self.current_char {
             if ch.is_numeric() || ch == '.' {
                 result.push(ch);
@@ -221,13 +221,13 @@ impl Lexer {
                 break;
             }
         }
-        
+
         result.parse().unwrap_or(0.0)
     }
 
     pub fn next_token(&mut self) -> Token {
         self.skip_whitespace();
-        
+
         match self.current_char {
             None => Token::EOF,
             Some('"') => {

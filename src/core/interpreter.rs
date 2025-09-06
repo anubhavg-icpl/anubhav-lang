@@ -1,11 +1,11 @@
+use crate::lang::lexer::{Lexer, Token};
+use crate::lang::parser::{Expression, Parser, Statement};
 use std::collections::HashMap;
 use std::fs;
 use std::io;
+use std::path::Path;
 use std::thread;
 use std::time::Duration;
-use std::path::Path;
-use crate::lang::parser::{Statement, Expression, Parser};
-use crate::lang::lexer::{Token, Lexer};
 
 pub struct Interpreter {
     pub(crate) intents: HashMap<String, String>,
@@ -38,7 +38,10 @@ impl Interpreter {
                 Statement::IntentDeclaration { name, message } => {
                     self.intents.insert(name, message);
                 }
-                Statement::ManifestCall { intent_name, with_message } => {
+                Statement::ManifestCall {
+                    intent_name,
+                    with_message,
+                } => {
                     if let Some(message) = self.intents.get(&intent_name) {
                         if let Some(context) = with_message {
                             println!("{} {}", message, context);
@@ -67,7 +70,7 @@ impl Interpreter {
                     let mut combined = String::new();
                     for part in parts {
                         if part.starts_with("${") && part.ends_with("}") {
-                            let var_name = &part[2..part.len()-1];
+                            let var_name = &part[2..part.len() - 1];
                             if let Some(msg) = self.intents.get(var_name) {
                                 combined.push_str(msg);
                             } else if let Some(val) = self.calculations.get(var_name) {
@@ -94,7 +97,11 @@ impl Interpreter {
                         }
                     }
                 }
-                Statement::If { condition, then_body, else_body } => {
+                Statement::If {
+                    condition,
+                    then_body,
+                    else_body,
+                } => {
                     let cond_value = self.evaluate_expression(&condition)?;
                     if cond_value != 0.0 {
                         self.execute(then_body)?;
@@ -106,7 +113,7 @@ impl Interpreter {
                     let mut output = String::new();
                     for item in items {
                         if item.starts_with("${") && item.ends_with("}") {
-                            let var_name = &item[2..item.len()-1];
+                            let var_name = &item[2..item.len() - 1];
                             if let Some(msg) = self.intents.get(var_name) {
                                 output.push_str(msg);
                             } else if let Some(val) = self.calculations.get(var_name) {
@@ -147,7 +154,13 @@ impl Interpreter {
                         self.variables.insert(variable, -1.0);
                     }
                 }
-                Statement::For { variable, start, end, step, body } => {
+                Statement::For {
+                    variable,
+                    start,
+                    end,
+                    step,
+                    body,
+                } => {
                     let start_val = self.evaluate_expression(&start)?;
                     let end_val = self.evaluate_expression(&end)?;
                     let step_val = if let Some(s) = step {
@@ -155,14 +168,14 @@ impl Interpreter {
                     } else {
                         1.0
                     };
-                    
+
                     let mut current = start_val;
                     if step_val > 0.0 {
                         while current <= end_val {
                             self.variables.insert(variable.clone(), current);
                             match self.execute(body.clone()) {
                                 Err(e) if e == "BREAK" => break,
-                                Err(e) if e == "CONTINUE" => {},
+                                Err(e) if e == "CONTINUE" => {}
                                 Err(e) => return Err(e),
                                 Ok(_) => {}
                             }
@@ -173,7 +186,7 @@ impl Interpreter {
                             self.variables.insert(variable.clone(), current);
                             match self.execute(body.clone()) {
                                 Err(e) if e == "BREAK" => break,
-                                Err(e) if e == "CONTINUE" => {},
+                                Err(e) if e == "CONTINUE" => {}
                                 Err(e) => return Err(e),
                                 Ok(_) => {}
                             }
@@ -193,7 +206,10 @@ impl Interpreter {
                     }
                     println!("✓ Assertion passed");
                 }
-                Statement::TryCatch { try_body, catch_body } => {
+                Statement::TryCatch {
+                    try_body,
+                    catch_body,
+                } => {
                     match self.execute(try_body.clone()) {
                         Ok(_) => {
                             // TRY block succeeded, continue normally
@@ -204,27 +220,35 @@ impl Interpreter {
                         }
                     }
                 }
-                Statement::StringTransform { name, operation, source } => {
+                Statement::StringTransform {
+                    name,
+                    operation,
+                    source,
+                } => {
                     let source_string = if let Some(intent_str) = self.intents.get(&source) {
                         intent_str.clone()
                     } else {
                         // If not found as intent, treat as literal string
                         source.clone()
                     };
-                    
+
                     let result = match operation.as_str() {
                         "UPPERCASE" => source_string.to_uppercase(),
                         "LOWERCASE" => source_string.to_lowercase(),
                         _ => return Err(format!("Unknown string operation: {}", operation)),
                     };
-                    
+
                     self.intents.insert(name.clone(), result);
                 }
-                Statement::Switch { expression, cases, default_case } => {
+                Statement::Switch {
+                    expression,
+                    cases,
+                    default_case,
+                } => {
                     let switch_value = self.evaluate_expression(&expression)?;
-                    
+
                     let mut executed = false;
-                    
+
                     for (case_value, case_body) in cases {
                         let case_val = self.evaluate_expression(&case_value)?;
                         if switch_value == case_val {
@@ -233,7 +257,7 @@ impl Interpreter {
                             break;
                         }
                     }
-                    
+
                     if !executed {
                         if let Some(default_body) = default_case {
                             self.execute(default_body.clone())?;
@@ -251,7 +275,10 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::ArrayPop { array_name, result_name } => {
+                Statement::ArrayPop {
+                    array_name,
+                    result_name,
+                } => {
                     if let Some(array) = self.arrays.get_mut(&array_name) {
                         if let Some(val) = array.pop() {
                             self.variables.insert(result_name.clone(), val);
@@ -262,33 +289,51 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::ArraySize { array_name, result_name } => {
+                Statement::ArraySize {
+                    array_name,
+                    result_name,
+                } => {
                     if let Some(array) = self.arrays.get(&array_name) {
-                        self.variables.insert(result_name.clone(), array.len() as f64);
+                        self.variables
+                            .insert(result_name.clone(), array.len() as f64);
                     } else {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::ArrayGet { array_name, index, result_name } => {
+                Statement::ArrayGet {
+                    array_name,
+                    index,
+                    result_name,
+                } => {
                     let idx = self.evaluate_expression(&index)? as usize;
                     if let Some(array) = self.arrays.get(&array_name) {
                         if idx < array.len() {
                             self.variables.insert(result_name.clone(), array[idx]);
                         } else {
-                            return Err(format!("Array index {} out of bounds for array '{}'", idx, array_name));
+                            return Err(format!(
+                                "Array index {} out of bounds for array '{}'",
+                                idx, array_name
+                            ));
                         }
                     } else {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::ArraySet { array_name, index, value } => {
+                Statement::ArraySet {
+                    array_name,
+                    index,
+                    value,
+                } => {
                     let idx = self.evaluate_expression(&index)? as usize;
                     let val = self.evaluate_expression(&value)?;
                     if let Some(array) = self.arrays.get_mut(&array_name) {
                         if idx < array.len() {
                             array[idx] = val;
                         } else {
-                            return Err(format!("Array index {} out of bounds for array '{}'", idx, array_name));
+                            return Err(format!(
+                                "Array index {} out of bounds for array '{}'",
+                                idx, array_name
+                            ));
                         }
                     } else {
                         return Err(format!("Array '{}' not found", array_name));
@@ -298,12 +343,13 @@ impl Interpreter {
                     // Read and execute the imported file
                     let content = fs::read_to_string(&filename)
                         .map_err(|e| format!("Failed to read file '{}': {}", filename, e))?;
-                    
+
                     let lexer = Lexer::new(content);
                     let mut parser = Parser::new(lexer);
-                    let imported_statements = parser.parse()
+                    let imported_statements = parser
+                        .parse()
                         .map_err(|e| format!("Parse error in '{}': {}", filename, e))?;
-                    
+
                     // Execute the imported statements
                     self.execute(imported_statements)?;
                 }
@@ -311,10 +357,11 @@ impl Interpreter {
                     // Create export data
                     let mut export_content = String::new();
                     export_content.push_str("# Exported from Anubhav\n");
-                    
+
                     for item in &items {
                         if let Some(intent_value) = self.intents.get(item) {
-                            export_content.push_str(&format!("INTENT {} \"{}\"\n", item, intent_value));
+                            export_content
+                                .push_str(&format!("INTENT {} \"{}\"\n", item, intent_value));
                         } else if let Some(calc_value) = self.calculations.get(item) {
                             export_content.push_str(&format!("STORE {} {}\n", item, calc_value));
                         } else if let Some(var_value) = self.variables.get(item) {
@@ -326,11 +373,11 @@ impl Interpreter {
                             }
                         }
                     }
-                    
+
                     // Write to file
                     fs::write(&filename, export_content)
                         .map_err(|e| format!("Failed to write to file '{}': {}", filename, e))?;
-                    
+
                     println!("Exported {} items to {}", items.len(), filename);
                 }
                 Statement::Break => {
@@ -339,50 +386,67 @@ impl Interpreter {
                 Statement::Continue => {
                     return Err("CONTINUE".to_string()); // Special error code for continue
                 }
-                Statement::FunctionDefinition { name, parameters, body } => {
-                    self.functions.insert(name.clone(), (parameters.clone(), body.clone()));
-                    println!("Function '{}' defined with {} parameters", name, parameters.len());
+                Statement::FunctionDefinition {
+                    name,
+                    parameters,
+                    body,
+                } => {
+                    self.functions
+                        .insert(name.clone(), (parameters.clone(), body.clone()));
+                    println!(
+                        "Function '{}' defined with {} parameters",
+                        name,
+                        parameters.len()
+                    );
                 }
-                Statement::FunctionCall { function_name, arguments, result_name } => {
+                Statement::FunctionCall {
+                    function_name,
+                    arguments,
+                    result_name,
+                } => {
                     if let Some((params, func_body)) = self.functions.get(&function_name).cloned() {
                         // Evaluate arguments
                         let mut arg_values = Vec::new();
                         for arg in &arguments {
                             arg_values.push(self.evaluate_expression(arg)?);
                         }
-                        
+
                         // Check parameter count
                         if arg_values.len() != params.len() {
-                            return Err(format!("Function '{}' expects {} parameters, got {}", 
-                                function_name, params.len(), arg_values.len()));
+                            return Err(format!(
+                                "Function '{}' expects {} parameters, got {}",
+                                function_name,
+                                params.len(),
+                                arg_values.len()
+                            ));
                         }
-                        
+
                         // Create new local scope
                         let mut local_vars = HashMap::new();
                         for (i, param) in params.iter().enumerate() {
                             local_vars.insert(param.clone(), arg_values[i]);
                         }
                         self.call_stack.push(local_vars);
-                        
+
                         // Execute function body
                         let mut return_value = 0.0;
                         match self.execute(func_body) {
-                            Ok(_) => {},
+                            Ok(_) => {}
                             Err(e) if e.starts_with("RETURN:") => {
                                 // Extract return value
                                 if let Ok(val) = e[7..].parse::<f64>() {
                                     return_value = val;
                                 }
-                            },
+                            }
                             Err(e) => {
                                 self.call_stack.pop();
                                 return Err(e);
                             }
                         }
-                        
+
                         // Pop local scope
                         self.call_stack.pop();
-                        
+
                         // Store result if specified
                         if let Some(result_var) = result_name {
                             self.variables.insert(result_var.clone(), return_value);
@@ -399,38 +463,48 @@ impl Interpreter {
                     };
                     return Err(format!("RETURN:{}", return_val)); // Special error code for return
                 }
-                Statement::ArraySort { array_name, ascending } => {
+                Statement::ArraySort {
+                    array_name,
+                    ascending,
+                } => {
                     if let Some(array) = self.arrays.get_mut(&array_name) {
                         if ascending {
                             array.sort_by(|a, b| a.partial_cmp(b).unwrap());
                         } else {
                             array.sort_by(|a, b| b.partial_cmp(a).unwrap());
                         }
-                        println!("Array '{}' sorted {}", array_name, 
-                            if ascending { "ascending" } else { "descending" });
+                        println!(
+                            "Array '{}' sorted {}",
+                            array_name,
+                            if ascending { "ascending" } else { "descending" }
+                        );
                     } else {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::ArrayFilter { array_name, condition, result_array } => {
+                Statement::ArrayFilter {
+                    array_name,
+                    condition,
+                    result_array,
+                } => {
                     if let Some(source_array) = self.arrays.get(&array_name).cloned() {
                         let mut filtered_array = Vec::new();
-                        
+
                         for (index, &value) in source_array.iter().enumerate() {
                             // Set a temporary variable for the current array element
                             let old_item_value = self.variables.get("item").copied();
                             let old_index_value = self.variables.get("index").copied();
-                            
+
                             self.variables.insert("item".to_string(), value);
                             self.variables.insert("index".to_string(), index as f64);
-                            
+
                             // Evaluate condition
                             let condition_result = self.evaluate_expression(&condition)?;
-                            
+
                             if condition_result != 0.0 {
                                 filtered_array.push(value);
                             }
-                            
+
                             // Restore old values
                             if let Some(old_val) = old_item_value {
                                 self.variables.insert("item".to_string(), old_val);
@@ -443,11 +517,14 @@ impl Interpreter {
                                 self.variables.remove("index");
                             }
                         }
-                        
+
                         self.arrays.insert(result_array.clone(), filtered_array);
-                        println!("Filtered {} into {} with {} elements", 
-                            array_name, result_array, 
-                            self.arrays.get(&result_array).unwrap().len());
+                        println!(
+                            "Filtered {} into {} with {} elements",
+                            array_name,
+                            result_array,
+                            self.arrays.get(&result_array).unwrap().len()
+                        );
                     } else {
                         return Err(format!("Array '{}' not found", array_name));
                     }
@@ -460,22 +537,26 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::ArrayMap { array_name, expression, result_array } => {
+                Statement::ArrayMap {
+                    array_name,
+                    expression,
+                    result_array,
+                } => {
                     if let Some(source_array) = self.arrays.get(&array_name).cloned() {
                         let mut mapped_array = Vec::new();
-                        
+
                         for (index, &value) in source_array.iter().enumerate() {
                             // Set temporary variables
                             let old_item_value = self.variables.get("item").copied();
                             let old_index_value = self.variables.get("index").copied();
-                            
+
                             self.variables.insert("item".to_string(), value);
                             self.variables.insert("index".to_string(), index as f64);
-                            
+
                             // Evaluate expression
                             let mapped_value = self.evaluate_expression(&expression)?;
                             mapped_array.push(mapped_value);
-                            
+
                             // Restore old values
                             if let Some(old_val) = old_item_value {
                                 self.variables.insert("item".to_string(), old_val);
@@ -488,16 +569,22 @@ impl Interpreter {
                                 self.variables.remove("index");
                             }
                         }
-                        
+
                         self.arrays.insert(result_array.clone(), mapped_array);
-                        println!("Mapped {} into {} with {} elements", 
-                            array_name, result_array, 
-                            self.arrays.get(&result_array).unwrap().len());
+                        println!(
+                            "Mapped {} into {} with {} elements",
+                            array_name,
+                            result_array,
+                            self.arrays.get(&result_array).unwrap().len()
+                        );
                     } else {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::ArraySum { array_name, result_name } => {
+                Statement::ArraySum {
+                    array_name,
+                    result_name,
+                } => {
                     if let Some(array) = self.arrays.get(&array_name) {
                         let sum: f64 = array.iter().sum();
                         self.variables.insert(result_name.clone(), sum);
@@ -506,9 +593,14 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::ArrayJoin { array_name, separator, result_name } => {
+                Statement::ArrayJoin {
+                    array_name,
+                    separator,
+                    result_name,
+                } => {
                     if let Some(array) = self.arrays.get(&array_name) {
-                        let joined = array.iter()
+                        let joined = array
+                            .iter()
                             .map(|n| n.to_string())
                             .collect::<Vec<_>>()
                             .join(&separator);
@@ -522,7 +614,11 @@ impl Interpreter {
                     self.dicts.insert(name.clone(), HashMap::new());
                     println!("Dictionary '{}' created", name);
                 }
-                Statement::DictPut { dict_name, key, value } => {
+                Statement::DictPut {
+                    dict_name,
+                    key,
+                    value,
+                } => {
                     let val = self.evaluate_expression(&value)?;
                     if let Some(dict) = self.dicts.get_mut(&dict_name) {
                         dict.insert(key.clone(), val);
@@ -531,18 +627,28 @@ impl Interpreter {
                         return Err(format!("Dictionary '{}' not found", dict_name));
                     }
                 }
-                Statement::DictFetch { dict_name, key, result_name } => {
+                Statement::DictFetch {
+                    dict_name,
+                    key,
+                    result_name,
+                } => {
                     if let Some(dict) = self.dicts.get(&dict_name) {
                         if let Some(&value) = dict.get(&key) {
                             self.variables.insert(result_name.clone(), value);
                         } else {
-                            return Err(format!("Key '{}' not found in dictionary '{}'", key, dict_name));
+                            return Err(format!(
+                                "Key '{}' not found in dictionary '{}'",
+                                key, dict_name
+                            ));
                         }
                     } else {
                         return Err(format!("Dictionary '{}' not found", dict_name));
                     }
                 }
-                Statement::DictKeys { dict_name, result_array } => {
+                Statement::DictKeys {
+                    dict_name,
+                    result_array,
+                } => {
                     if let Some(_dict) = self.dicts.get(&dict_name) {
                         let keys: Vec<f64> = Vec::new(); // Keys as array indices for now
                         self.arrays.insert(result_array.clone(), keys);
@@ -551,11 +657,17 @@ impl Interpreter {
                         return Err(format!("Dictionary '{}' not found", dict_name));
                     }
                 }
-                Statement::DictValues { dict_name, result_array } => {
+                Statement::DictValues {
+                    dict_name,
+                    result_array,
+                } => {
                     if let Some(dict) = self.dicts.get(&dict_name) {
                         let values: Vec<f64> = dict.values().copied().collect();
                         self.arrays.insert(result_array.clone(), values);
-                        println!("Extracted values from '{}' to array '{}'", dict_name, result_array);
+                        println!(
+                            "Extracted values from '{}' to array '{}'",
+                            dict_name, result_array
+                        );
                     } else {
                         return Err(format!("Dictionary '{}' not found", dict_name));
                     }
@@ -568,54 +680,69 @@ impl Interpreter {
                         return Err(format!("Dictionary '{}' not found", dict_name));
                     }
                 }
-                Statement::ReadFile { filename, result_name } => {
-                    match fs::read_to_string(&filename) {
-                        Ok(content) => {
-                            self.intents.insert(result_name.clone(), content.clone());
-                            println!("Read {} bytes from '{}'", content.len(), filename);
-                        }
-                        Err(e) => return Err(format!("Failed to read file '{}': {}", filename, e))
+                Statement::ReadFile {
+                    filename,
+                    result_name,
+                } => match fs::read_to_string(&filename) {
+                    Ok(content) => {
+                        self.intents.insert(result_name.clone(), content.clone());
+                        println!("Read {} bytes from '{}'", content.len(), filename);
                     }
-                }
+                    Err(e) => return Err(format!("Failed to read file '{}': {}", filename, e)),
+                },
                 Statement::WriteFile { filename, content } => {
                     let actual_content = if content.starts_with("${") && content.ends_with("}") {
-                        let var_name = &content[2..content.len()-1];
-                        self.intents.get(var_name).cloned()
+                        let var_name = &content[2..content.len() - 1];
+                        self.intents
+                            .get(var_name)
+                            .cloned()
                             .unwrap_or_else(|| content.clone())
                     } else {
                         content.clone()
                     };
-                    
+
                     match fs::write(&filename, actual_content.as_bytes()) {
                         Ok(_) => println!("Wrote {} bytes to '{}'", actual_content.len(), filename),
-                        Err(e) => return Err(format!("Failed to write to file '{}': {}", filename, e))
+                        Err(e) => {
+                            return Err(format!("Failed to write to file '{}': {}", filename, e));
+                        }
                     }
                 }
                 Statement::AppendFile { filename, content } => {
                     use std::fs::OpenOptions;
                     use std::io::Write;
-                    
+
                     let actual_content = if content.starts_with("${") && content.ends_with("}") {
-                        let var_name = &content[2..content.len()-1];
-                        self.intents.get(var_name).cloned()
+                        let var_name = &content[2..content.len() - 1];
+                        self.intents
+                            .get(var_name)
+                            .cloned()
                             .unwrap_or_else(|| content.clone())
                     } else {
                         content.clone()
                     };
-                    
+
                     match OpenOptions::new()
                         .create(true)
                         .append(true)
                         .open(&filename)
                         .and_then(|mut file| file.write_all(actual_content.as_bytes()))
                     {
-                        Ok(_) => println!("Appended {} bytes to '{}'", actual_content.len(), filename),
-                        Err(e) => return Err(format!("Failed to append to file '{}': {}", filename, e))
+                        Ok(_) => {
+                            println!("Appended {} bytes to '{}'", actual_content.len(), filename)
+                        }
+                        Err(e) => {
+                            return Err(format!("Failed to append to file '{}': {}", filename, e));
+                        }
                     }
                 }
-                Statement::FileExists { filename, result_name } => {
+                Statement::FileExists {
+                    filename,
+                    result_name,
+                } => {
                     let exists = Path::new(&filename).exists();
-                    self.variables.insert(result_name.clone(), if exists { 1.0 } else { 0.0 });
+                    self.variables
+                        .insert(result_name.clone(), if exists { 1.0 } else { 0.0 });
                     println!("File '{}' exists: {}", filename, exists);
                 }
                 Statement::Sleep { milliseconds } => {
@@ -623,16 +750,20 @@ impl Interpreter {
                     println!("Sleeping for {} ms...", ms);
                     thread::sleep(Duration::from_millis(ms));
                 }
-                Statement::Input { prompt, result_name } => {
+                Statement::Input {
+                    prompt,
+                    result_name,
+                } => {
                     print!("{}", prompt);
                     io::Write::flush(&mut io::stdout()).unwrap();
-                    
+
                     let mut input = String::new();
-                    io::stdin().read_line(&mut input)
+                    io::stdin()
+                        .read_line(&mut input)
                         .map_err(|e| format!("Failed to read input: {}", e))?;
-                    
+
                     let trimmed = input.trim().to_string();
-                    
+
                     // Try to parse as number, otherwise store as string
                     if let Ok(num) = trimmed.parse::<f64>() {
                         self.variables.insert(result_name.clone(), num);
@@ -640,7 +771,10 @@ impl Interpreter {
                         self.intents.insert(result_name.clone(), trimmed);
                     }
                 }
-                Statement::GetType { variable, result_name } => {
+                Statement::GetType {
+                    variable,
+                    result_name,
+                } => {
                     let type_str = if self.variables.contains_key(&variable) {
                         "number"
                     } else if self.intents.contains_key(&variable) {
@@ -652,9 +786,13 @@ impl Interpreter {
                     } else {
                         "undefined"
                     };
-                    self.intents.insert(result_name.clone(), type_str.to_string());
+                    self.intents
+                        .insert(result_name.clone(), type_str.to_string());
                 }
-                Statement::ParseNumber { source, result_name } => {
+                Statement::ParseNumber {
+                    source,
+                    result_name,
+                } => {
                     let value = if let Some(str_val) = self.intents.get(&source) {
                         str_val.parse::<f64>().unwrap_or(0.0)
                     } else {
@@ -662,7 +800,12 @@ impl Interpreter {
                     };
                     self.variables.insert(result_name.clone(), value);
                 }
-                Statement::Range { start, end, step, result_array } => {
+                Statement::Range {
+                    start,
+                    end,
+                    step,
+                    result_array,
+                } => {
                     let start_val = self.evaluate_expression(&start)?;
                     let end_val = self.evaluate_expression(&end)?;
                     let step_val = if let Some(s) = step {
@@ -670,7 +813,7 @@ impl Interpreter {
                     } else {
                         1.0
                     };
-                    
+
                     let mut range_array = Vec::new();
                     let mut current = start_val;
                     while current <= end_val {
@@ -680,7 +823,10 @@ impl Interpreter {
                     self.arrays.insert(result_array.clone(), range_array);
                     println!("Generated range array '{}'", result_array);
                 }
-                Statement::Unique { array_name, result_array } => {
+                Statement::Unique {
+                    array_name,
+                    result_array,
+                } => {
                     if let Some(array) = self.arrays.get(&array_name) {
                         let mut unique = Vec::new();
                         for &val in array {
@@ -694,8 +840,14 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::Concat { array1, array2, result_array } => {
-                    if let (Some(arr1), Some(arr2)) = (self.arrays.get(&array1), self.arrays.get(&array2)) {
+                Statement::Concat {
+                    array1,
+                    array2,
+                    result_array,
+                } => {
+                    if let (Some(arr1), Some(arr2)) =
+                        (self.arrays.get(&array1), self.arrays.get(&array2))
+                    {
                         let mut concatenated = arr1.clone();
                         concatenated.extend(arr2);
                         self.arrays.insert(result_array.clone(), concatenated);
@@ -704,7 +856,11 @@ impl Interpreter {
                         return Err(format!("Array not found"));
                     }
                 }
-                Statement::Take { array_name, count, result_array } => {
+                Statement::Take {
+                    array_name,
+                    count,
+                    result_array,
+                } => {
                     let n = self.evaluate_expression(&count)? as usize;
                     if let Some(array) = self.arrays.get(&array_name) {
                         let taken: Vec<f64> = array.iter().take(n).copied().collect();
@@ -714,7 +870,11 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::Drop { array_name, count, result_array } => {
+                Statement::Drop {
+                    array_name,
+                    count,
+                    result_array,
+                } => {
                     let n = self.evaluate_expression(&count)? as usize;
                     if let Some(array) = self.arrays.get(&array_name) {
                         let dropped: Vec<f64> = array.iter().skip(n).copied().collect();
@@ -724,7 +884,11 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::Find { array_name, condition, result_name } => {
+                Statement::Find {
+                    array_name,
+                    condition,
+                    result_name,
+                } => {
                     // Clone the array to avoid borrowing issues
                     let array_clone = self.arrays.get(&array_name).cloned();
                     if let Some(array) = array_clone {
@@ -741,7 +905,10 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::Average { array_name, result_name } => {
+                Statement::Average {
+                    array_name,
+                    result_name,
+                } => {
                     if let Some(array) = self.arrays.get(&array_name) {
                         if !array.is_empty() {
                             let avg: f64 = array.iter().sum::<f64>() / array.len() as f64;
@@ -774,7 +941,7 @@ impl Interpreter {
                             let j = (self.next_random() * len as f64) as usize;
                             swaps.push((i, j.min(len - 1)));
                         }
-                        
+
                         // Now apply the swaps
                         if let Some(array) = self.arrays.get_mut(&array_name) {
                             for (i, j) in swaps {
@@ -786,7 +953,10 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::Clone { source, destination } => {
+                Statement::Clone {
+                    source,
+                    destination,
+                } => {
                     if let Some(array) = self.arrays.get(&source).cloned() {
                         self.arrays.insert(destination.clone(), array);
                         println!("Cloned array '{}' to '{}'", source, destination);
@@ -797,7 +967,12 @@ impl Interpreter {
                         return Err(format!("Source '{}' not found", source));
                     }
                 }
-                Statement::Fold { array_name, initial, operation, result_name } => {
+                Statement::Fold {
+                    array_name,
+                    initial,
+                    operation,
+                    result_name,
+                } => {
                     // Simplified fold implementation - clone array to avoid borrowing issues
                     let array_clone = self.arrays.get(&array_name).cloned();
                     if let Some(array) = array_clone {
@@ -815,8 +990,14 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::Zip { array1, array2, result_array } => {
-                    if let (Some(arr1), Some(arr2)) = (self.arrays.get(&array1), self.arrays.get(&array2)) {
+                Statement::Zip {
+                    array1,
+                    array2,
+                    result_array,
+                } => {
+                    if let (Some(arr1), Some(arr2)) =
+                        (self.arrays.get(&array1), self.arrays.get(&array2))
+                    {
                         let mut zipped = Vec::new();
                         let len = arr1.len().min(arr2.len());
                         for i in 0..len {
@@ -824,12 +1005,18 @@ impl Interpreter {
                             zipped.push(arr2[i]);
                         }
                         self.arrays.insert(result_array.clone(), zipped);
-                        println!("Zipped arrays '{}' and '{}' into '{}'", array1, array2, result_array);
+                        println!(
+                            "Zipped arrays '{}' and '{}' into '{}'",
+                            array1, array2, result_array
+                        );
                     } else {
                         return Err(format!("One or both arrays not found"));
                     }
                 }
-                Statement::Flatten { array_name, result_array } => {
+                Statement::Flatten {
+                    array_name,
+                    result_array,
+                } => {
                     // For simplicity, just copy the array (would need nested array support for true flatten)
                     if let Some(array) = self.arrays.get(&array_name).cloned() {
                         self.arrays.insert(result_array.clone(), array);
@@ -838,7 +1025,11 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::Count { array_name, condition, result_name } => {
+                Statement::Count {
+                    array_name,
+                    condition,
+                    result_name,
+                } => {
                     let array_clone = self.arrays.get(&array_name).cloned();
                     if let Some(array) = array_clone {
                         let mut count = 0;
@@ -850,12 +1041,20 @@ impl Interpreter {
                         }
                         self.variables.remove("item");
                         self.variables.insert(result_name.clone(), count as f64);
-                        println!("Counted {} items matching condition in '{}'", count, array_name);
+                        println!(
+                            "Counted {} items matching condition in '{}'",
+                            count, array_name
+                        );
                     } else {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
-                Statement::Replace { text, pattern, replacement, result_name } => {
+                Statement::Replace {
+                    text,
+                    pattern,
+                    replacement,
+                    result_name,
+                } => {
                     if let Some(target_str) = self.intents.get(&text) {
                         let replaced = target_str.replace(&pattern, &replacement);
                         self.intents.insert(result_name.clone(), replaced.clone());
@@ -864,13 +1063,22 @@ impl Interpreter {
                         return Err(format!("String '{}' not found", text));
                     }
                 }
-                Statement::Split { text, delimiter, result_array } => {
+                Statement::Split {
+                    text,
+                    delimiter,
+                    result_array,
+                } => {
                     if let Some(string) = self.intents.get(&text) {
                         let parts: Vec<&str> = string.split(&delimiter).collect();
                         // Convert to array of indices (since we can't store strings in arrays)
                         let indices: Vec<f64> = (0..parts.len()).map(|i| i as f64).collect();
                         self.arrays.insert(result_array.clone(), indices);
-                        println!("Split string '{}' by '{}' into {} parts", text, delimiter, parts.len());
+                        println!(
+                            "Split string '{}' by '{}' into {} parts",
+                            text,
+                            delimiter,
+                            parts.len()
+                        );
                     } else {
                         return Err(format!("String '{}' not found", text));
                     }
@@ -879,11 +1087,12 @@ impl Interpreter {
         }
         Ok(())
     }
-    
+
     fn next_random(&mut self) -> f64 {
         // Linear congruential generator: (a * seed + c) % m
         // Using constants from Numerical Recipes
-        self.random_seed = ((self.random_seed.wrapping_mul(1664525)).wrapping_add(1013904223)) % (1u64 << 32);
+        self.random_seed =
+            ((self.random_seed.wrapping_mul(1664525)).wrapping_add(1013904223)) % (1u64 << 32);
         (self.random_seed as f64) / ((1u64 << 32) as f64)
     }
 
@@ -897,17 +1106,22 @@ impl Interpreter {
                         return Ok(*value);
                     }
                 }
-                
+
                 // Fall back to global scope
-                self.variables.get(name)
+                self.variables
+                    .get(name)
                     .or_else(|| self.calculations.get(name))
                     .copied()
                     .ok_or_else(|| format!("Variable '{}' not found", name))
             }
-            Expression::BinaryOp { left, operator, right } => {
+            Expression::BinaryOp {
+                left,
+                operator,
+                right,
+            } => {
                 let left_val = self.evaluate_expression(left)?;
                 let right_val = self.evaluate_expression(right)?;
-                
+
                 match operator {
                     Token::Plus => Ok(left_val + right_val),
                     Token::Minus => Ok(left_val - right_val),
@@ -933,8 +1147,16 @@ impl Interpreter {
                     Token::Greater => Ok(if left_val > right_val { 1.0 } else { 0.0 }),
                     Token::LessEqual => Ok(if left_val <= right_val { 1.0 } else { 0.0 }),
                     Token::GreaterEqual => Ok(if left_val >= right_val { 1.0 } else { 0.0 }),
-                    Token::And => Ok(if left_val != 0.0 && right_val != 0.0 { 1.0 } else { 0.0 }),
-                    Token::Or => Ok(if left_val != 0.0 || right_val != 0.0 { 1.0 } else { 0.0 }),
+                    Token::And => Ok(if left_val != 0.0 && right_val != 0.0 {
+                        1.0
+                    } else {
+                        0.0
+                    }),
+                    Token::Or => Ok(if left_val != 0.0 || right_val != 0.0 {
+                        1.0
+                    } else {
+                        0.0
+                    }),
                     Token::Not => {
                         // NOT is a unary operator, right_val contains the operand
                         Ok(if right_val == 0.0 { 1.0 } else { 0.0 })
@@ -969,7 +1191,7 @@ impl Interpreter {
                             Err("SIZE function error".to_string())
                         }
                     }
-                    _ => Err(format!("Invalid operator: {:?}", operator))
+                    _ => Err(format!("Invalid operator: {:?}", operator)),
                 }
             }
         }

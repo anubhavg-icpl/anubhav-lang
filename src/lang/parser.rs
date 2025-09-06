@@ -306,7 +306,7 @@ impl Parser {
 
     pub fn parse(&mut self) -> Result<Vec<Statement>, String> {
         let mut statements = Vec::new();
-        
+
         while self.current_token != Token::EOF {
             match self.current_token {
                 Token::Intent => {
@@ -511,40 +511,40 @@ impl Parser {
                 }
             }
         }
-        
+
         Ok(statements)
     }
 
     fn parse_intent_declaration(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip INTENT
-        
+
         let name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected identifier after INTENT"));
         };
         self.advance();
-        
+
         let message = if let Token::StringLiteral(msg) = &self.current_token {
             msg.clone()
         } else {
             return Err(format!("Expected string literal after intent name"));
         };
         self.advance();
-        
+
         Ok(Statement::IntentDeclaration { name, message })
     }
 
     fn parse_manifest_call(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip MANIFEST
-        
+
         let intent_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected identifier after MANIFEST"));
         };
         self.advance();
-        
+
         let with_message = if self.current_token == Token::With {
             self.advance(); // Skip WITH
             if let Token::StringLiteral(msg) = &self.current_token {
@@ -557,54 +557,60 @@ impl Parser {
         } else {
             None
         };
-        
-        Ok(Statement::ManifestCall { intent_name, with_message })
+
+        Ok(Statement::ManifestCall {
+            intent_name,
+            with_message,
+        })
     }
 
     fn parse_calculate(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip CALCULATE
-        
+
         let name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected identifier after CALCULATE"));
         };
         self.advance();
-        
+
         let expression = self.parse_expression()?;
-        
+
         Ok(Statement::Calculate { name, expression })
     }
 
     fn parse_store(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip STORE
-        
+
         let name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected identifier after STORE"));
         };
         self.advance();
-        
+
         let value = self.parse_expression()?;
-        
+
         Ok(Statement::Store { name, value })
     }
 
     fn parse_combine(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip COMBINE
-        
+
         let name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected identifier after COMBINE"));
         };
         self.advance();
-        
+
         let mut parts = Vec::new();
-        
+
         // Parse string literals and identifiers
-        while matches!(self.current_token, Token::StringLiteral(_) | Token::Identifier(_)) {
+        while matches!(
+            self.current_token,
+            Token::StringLiteral(_) | Token::Identifier(_)
+        ) {
             match &self.current_token {
                 Token::StringLiteral(s) => {
                     parts.push(s.clone());
@@ -617,31 +623,33 @@ impl Parser {
                 _ => break,
             }
         }
-        
+
         if parts.is_empty() {
-            return Err(format!("Expected strings or identifiers after COMBINE name"));
+            return Err(format!(
+                "Expected strings or identifiers after COMBINE name"
+            ));
         }
-        
+
         Ok(Statement::Combine { name, parts })
     }
 
     fn parse_repeat(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip REPEAT
-        
+
         let count = self.parse_expression()?;
-        
+
         if self.current_token != Token::Times {
             return Err(format!("Expected TIMES after repeat count"));
         }
         self.advance(); // Skip TIMES
-        
+
         if self.current_token != Token::Do {
             return Err(format!("Expected DO after TIMES"));
         }
         self.advance(); // Skip DO
-        
+
         let mut body = Vec::new();
-        
+
         while self.current_token != Token::End && self.current_token != Token::EOF {
             match self.current_token {
                 Token::Intent => body.push(self.parse_intent_declaration()?),
@@ -653,38 +661,44 @@ impl Parser {
                 Token::Break => {
                     self.advance();
                     body.push(Statement::Break);
-                },
+                }
                 Token::Continue => {
                     self.advance();
                     body.push(Statement::Continue);
-                },
+                }
                 _ => {
-                    return Err(format!("Unexpected token in repeat body: {:?}", self.current_token));
+                    return Err(format!(
+                        "Unexpected token in repeat body: {:?}",
+                        self.current_token
+                    ));
                 }
             }
         }
-        
+
         if self.current_token != Token::End {
             return Err(format!("Expected END to close REPEAT"));
         }
         self.advance(); // Skip END
-        
+
         Ok(Statement::Repeat { count, body })
     }
 
     fn parse_if(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip IF
-        
+
         let condition = self.parse_expression()?;
-        
+
         if self.current_token != Token::Then {
             return Err(format!("Expected THEN after IF condition"));
         }
         self.advance(); // Skip THEN
-        
+
         let mut then_body = Vec::new();
-        
-        while self.current_token != Token::Else && self.current_token != Token::End && self.current_token != Token::EOF {
+
+        while self.current_token != Token::Else
+            && self.current_token != Token::End
+            && self.current_token != Token::EOF
+        {
             match self.current_token {
                 Token::Intent => then_body.push(self.parse_intent_declaration()?),
                 Token::Manifest => then_body.push(self.parse_manifest_call()?),
@@ -695,22 +709,25 @@ impl Parser {
                 Token::Break => {
                     self.advance();
                     then_body.push(Statement::Break);
-                },
+                }
                 Token::Continue => {
                     self.advance();
                     then_body.push(Statement::Continue);
-                },
+                }
                 Token::Return => then_body.push(self.parse_return()?),
                 _ => {
-                    return Err(format!("Unexpected token in IF body: {:?}", self.current_token));
+                    return Err(format!(
+                        "Unexpected token in IF body: {:?}",
+                        self.current_token
+                    ));
                 }
             }
         }
-        
+
         let else_body = if self.current_token == Token::Else {
             self.advance(); // Skip ELSE
             let mut else_stmts = Vec::new();
-            
+
             while self.current_token != Token::End && self.current_token != Token::EOF {
                 match self.current_token {
                     Token::Intent => else_stmts.push(self.parse_intent_declaration()?),
@@ -723,14 +740,17 @@ impl Parser {
                     Token::Break => {
                         self.advance();
                         else_stmts.push(Statement::Break);
-                    },
+                    }
                     Token::Continue => {
                         self.advance();
                         else_stmts.push(Statement::Continue);
-                    },
+                    }
                     Token::Return => else_stmts.push(self.parse_return()?),
                     _ => {
-                        return Err(format!("Unexpected token in ELSE body: {:?}", self.current_token));
+                        return Err(format!(
+                            "Unexpected token in ELSE body: {:?}",
+                            self.current_token
+                        ));
                     }
                 }
             }
@@ -738,22 +758,29 @@ impl Parser {
         } else {
             None
         };
-        
+
         if self.current_token != Token::End {
             return Err(format!("Expected END to close IF"));
         }
         self.advance(); // Skip END
-        
-        Ok(Statement::If { condition, then_body, else_body })
+
+        Ok(Statement::If {
+            condition,
+            then_body,
+            else_body,
+        })
     }
 
     fn parse_print(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip PRINT
-        
+
         let mut items = Vec::new();
-        
+
         // Parse strings and identifiers for printing
-        while matches!(self.current_token, Token::StringLiteral(_) | Token::Identifier(_)) {
+        while matches!(
+            self.current_token,
+            Token::StringLiteral(_) | Token::Identifier(_)
+        ) {
             match &self.current_token {
                 Token::StringLiteral(s) => {
                     items.push(s.clone());
@@ -766,26 +793,26 @@ impl Parser {
                 _ => break,
             }
         }
-        
+
         if items.is_empty() {
             return Err(format!("Expected items after PRINT"));
         }
-        
+
         Ok(Statement::Print { items })
     }
 
     fn parse_while(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip WHILE
-        
+
         let condition = self.parse_expression()?;
-        
+
         if self.current_token != Token::Do {
             return Err(format!("Expected DO after WHILE condition"));
         }
         self.advance(); // Skip DO
-        
+
         let mut body = Vec::new();
-        
+
         while self.current_token != Token::End && self.current_token != Token::EOF {
             match self.current_token {
                 Token::Intent => body.push(self.parse_intent_declaration()?),
@@ -800,84 +827,87 @@ impl Parser {
                 Token::Break => {
                     self.advance();
                     body.push(Statement::Break);
-                },
+                }
                 Token::Continue => {
                     self.advance();
                     body.push(Statement::Continue);
-                },
+                }
                 _ => {
-                    return Err(format!("Unexpected token in WHILE body: {:?}", self.current_token));
+                    return Err(format!(
+                        "Unexpected token in WHILE body: {:?}",
+                        self.current_token
+                    ));
                 }
             }
         }
-        
+
         if self.current_token != Token::End {
             return Err(format!("Expected END to close WHILE"));
         }
         self.advance(); // Skip END
-        
+
         Ok(Statement::While { condition, body })
     }
 
     fn parse_increment(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip INCREMENT
-        
+
         let variable = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected variable name after INCREMENT"));
         };
         self.advance();
-        
+
         Ok(Statement::Increment { variable })
     }
 
     fn parse_decrement(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip DECREMENT
-        
+
         let variable = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected variable name after DECREMENT"));
         };
         self.advance();
-        
+
         Ok(Statement::Decrement { variable })
     }
 
     fn parse_for(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip FOR
-        
+
         let variable = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected variable name after FOR"));
         };
         self.advance();
-        
+
         let start = self.parse_expression()?;
-        
+
         if self.current_token != Token::To {
             return Err(format!("Expected TO after FOR start value"));
         }
         self.advance(); // Skip TO
-        
+
         let end = self.parse_expression()?;
-        
+
         let step = if self.current_token == Token::Step {
             self.advance(); // Skip STEP
             Some(self.parse_expression()?)
         } else {
             None
         };
-        
+
         if self.current_token != Token::Do {
             return Err(format!("Expected DO after FOR parameters"));
         }
         self.advance(); // Skip DO
-        
+
         let mut body = Vec::new();
-        
+
         while self.current_token != Token::End && self.current_token != Token::EOF {
             match self.current_token {
                 Token::Intent => body.push(self.parse_intent_declaration()?),
@@ -898,30 +928,39 @@ impl Parser {
                 Token::Break => {
                     self.advance();
                     body.push(Statement::Break);
-                },
+                }
                 Token::Continue => {
                     self.advance();
                     body.push(Statement::Continue);
-                },
+                }
                 _ => {
-                    return Err(format!("Unexpected token in FOR body: {:?}", self.current_token));
+                    return Err(format!(
+                        "Unexpected token in FOR body: {:?}",
+                        self.current_token
+                    ));
                 }
             }
         }
-        
+
         if self.current_token != Token::End {
             return Err(format!("Expected END to close FOR"));
         }
         self.advance(); // Skip END
-        
-        Ok(Statement::For { variable, start, end, step, body })
+
+        Ok(Statement::For {
+            variable,
+            start,
+            end,
+            step,
+            body,
+        })
     }
-    
+
     fn parse_assert(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip ASSERT
-        
+
         let condition = self.parse_expression()?;
-        
+
         let message = if matches!(self.current_token, Token::StringLiteral(_)) {
             if let Token::StringLiteral(msg) = &self.current_token {
                 let msg = msg.clone();
@@ -933,15 +972,15 @@ impl Parser {
         } else {
             None
         };
-        
+
         Ok(Statement::Assert { condition, message })
     }
-    
+
     fn parse_try_catch(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip TRY
-        
+
         let mut try_body = Vec::new();
-        
+
         while self.current_token != Token::Catch {
             match self.current_token {
                 Token::EOF => return Err(format!("Expected CATCH after TRY")),
@@ -959,15 +998,18 @@ impl Parser {
                 Token::For => try_body.push(self.parse_for()?),
                 Token::Assert => try_body.push(self.parse_assert()?),
                 _ => {
-                    return Err(format!("Unexpected token in TRY body: {:?}", self.current_token));
+                    return Err(format!(
+                        "Unexpected token in TRY body: {:?}",
+                        self.current_token
+                    ));
                 }
             }
         }
-        
+
         self.advance(); // Skip CATCH
-        
+
         let mut catch_body = Vec::new();
-        
+
         while self.current_token != Token::End {
             match self.current_token {
                 Token::EOF => return Err(format!("Expected END after CATCH")),
@@ -985,19 +1027,25 @@ impl Parser {
                 Token::For => catch_body.push(self.parse_for()?),
                 Token::Assert => catch_body.push(self.parse_assert()?),
                 _ => {
-                    return Err(format!("Unexpected token in CATCH body: {:?}", self.current_token));
+                    return Err(format!(
+                        "Unexpected token in CATCH body: {:?}",
+                        self.current_token
+                    ));
                 }
             }
         }
-        
+
         if self.current_token != Token::End {
             return Err(format!("Expected END to close TRY/CATCH"));
         }
         self.advance(); // Skip END
-        
-        Ok(Statement::TryCatch { try_body, catch_body })
+
+        Ok(Statement::TryCatch {
+            try_body,
+            catch_body,
+        })
     }
-    
+
     fn parse_string_transform(&mut self) -> Result<Statement, String> {
         let operation = match self.current_token {
             Token::Uppercase => "UPPERCASE".to_string(),
@@ -1005,14 +1053,14 @@ impl Parser {
             _ => return Err("Invalid string operation".to_string()),
         };
         self.advance(); // Skip operation token
-        
+
         let name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected identifier after {}", operation));
         };
         self.advance();
-        
+
         let source = match &self.current_token {
             Token::StringLiteral(s) => {
                 let result = s.clone();
@@ -1025,40 +1073,49 @@ impl Parser {
                 result
             }
             _ => {
-                return Err(format!("Expected string literal or identifier after {}", operation));
+                return Err(format!(
+                    "Expected string literal or identifier after {}",
+                    operation
+                ));
             }
         };
-        
-        Ok(Statement::StringTransform { name, operation, source })
+
+        Ok(Statement::StringTransform {
+            name,
+            operation,
+            source,
+        })
     }
-    
+
     fn parse_switch(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip SWITCH
-        
+
         let expression = self.parse_expression()?;
-        
+
         let mut cases = Vec::new();
         let mut default_case = None;
-        
+
         while self.current_token != Token::End {
             match self.current_token {
                 Token::Case => {
                     self.advance(); // Skip CASE
-                    
+
                     let case_value = self.parse_expression()?;
-                    
+
                     if self.current_token != Token::Do {
                         return Err("Expected DO after CASE value".to_string());
                     }
                     self.advance(); // Skip DO
-                    
+
                     let mut case_body = Vec::new();
-                    while self.current_token != Token::Case 
-                        && self.current_token != Token::Default 
-                        && self.current_token != Token::End {
-                        
+                    while self.current_token != Token::Case
+                        && self.current_token != Token::Default
+                        && self.current_token != Token::End
+                    {
                         match self.current_token {
-                            Token::EOF => return Err("Expected CASE, DEFAULT, or END in SWITCH".to_string()),
+                            Token::EOF => {
+                                return Err("Expected CASE, DEFAULT, or END in SWITCH".to_string());
+                            }
                             Token::Intent => case_body.push(self.parse_intent_declaration()?),
                             Token::Manifest => case_body.push(self.parse_manifest_call()?),
                             Token::Calculate => case_body.push(self.parse_calculate()?),
@@ -1074,21 +1131,24 @@ impl Parser {
                             Token::Assert => case_body.push(self.parse_assert()?),
                             Token::Switch => case_body.push(self.parse_switch()?),
                             _ => {
-                                return Err(format!("Unexpected token in CASE body: {:?}", self.current_token));
+                                return Err(format!(
+                                    "Unexpected token in CASE body: {:?}",
+                                    self.current_token
+                                ));
                             }
                         }
                     }
-                    
+
                     cases.push((case_value, case_body));
                 }
                 Token::Default => {
                     self.advance(); // Skip DEFAULT
-                    
+
                     if self.current_token != Token::Do {
                         return Err("Expected DO after DEFAULT".to_string());
                     }
                     self.advance(); // Skip DO
-                    
+
                     let mut default_body = Vec::new();
                     while self.current_token != Token::End {
                         match self.current_token {
@@ -1108,153 +1168,177 @@ impl Parser {
                             Token::Assert => default_body.push(self.parse_assert()?),
                             Token::Switch => default_body.push(self.parse_switch()?),
                             _ => {
-                                return Err(format!("Unexpected token in DEFAULT body: {:?}", self.current_token));
+                                return Err(format!(
+                                    "Unexpected token in DEFAULT body: {:?}",
+                                    self.current_token
+                                ));
                             }
                         }
                     }
-                    
+
                     default_case = Some(default_body);
                     break;
                 }
                 _ => {
-                    return Err(format!("Expected CASE or DEFAULT in SWITCH: {:?}", self.current_token));
+                    return Err(format!(
+                        "Expected CASE or DEFAULT in SWITCH: {:?}",
+                        self.current_token
+                    ));
                 }
             }
         }
-        
+
         if self.current_token != Token::End {
             return Err("Expected END to close SWITCH".to_string());
         }
         self.advance(); // Skip END
-        
-        Ok(Statement::Switch { expression, cases, default_case })
+
+        Ok(Statement::Switch {
+            expression,
+            cases,
+            default_case,
+        })
     }
-    
+
     fn parse_array_create(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip ARRAY
-        
+
         let name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err("Expected identifier after ARRAY".to_string());
         };
         self.advance();
-        
+
         Ok(Statement::ArrayCreate { name })
     }
-    
+
     fn parse_array_push(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip PUSH
-        
+
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err("Expected array name after PUSH".to_string());
         };
         self.advance();
-        
+
         let value = self.parse_expression()?;
-        
+
         Ok(Statement::ArrayPush { array_name, value })
     }
-    
+
     fn parse_array_pop(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip POP
-        
+
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err("Expected array name after POP".to_string());
         };
         self.advance();
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err("Expected result variable name after POP array".to_string());
         };
         self.advance();
-        
-        Ok(Statement::ArrayPop { array_name, result_name })
+
+        Ok(Statement::ArrayPop {
+            array_name,
+            result_name,
+        })
     }
-    
+
     fn parse_array_size(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip SIZE
-        
+
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected array name after SIZE"));
         };
         self.advance();
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for SIZE"));
         };
         self.advance();
-        
-        Ok(Statement::ArraySize { array_name, result_name })
+
+        Ok(Statement::ArraySize {
+            array_name,
+            result_name,
+        })
     }
 
     fn parse_array_get(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip GET
-        
+
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err("Expected array name after GET".to_string());
         };
         self.advance();
-        
+
         let index = self.parse_expression()?;
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err("Expected result variable name after GET index".to_string());
         };
         self.advance();
-        
-        Ok(Statement::ArrayGet { array_name, index, result_name })
+
+        Ok(Statement::ArrayGet {
+            array_name,
+            index,
+            result_name,
+        })
     }
-    
+
     fn parse_array_set(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip SET
-        
+
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err("Expected array name after SET".to_string());
         };
         self.advance();
-        
+
         let index = self.parse_expression()?;
-        
+
         let value = self.parse_expression()?;
-        
-        Ok(Statement::ArraySet { array_name, index, value })
+
+        Ok(Statement::ArraySet {
+            array_name,
+            index,
+            value,
+        })
     }
-    
+
     fn parse_import(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip IMPORT
-        
+
         let filename = if let Token::StringLiteral(name) = &self.current_token {
             name.clone()
         } else {
             return Err("Expected filename string after IMPORT".to_string());
         };
         self.advance();
-        
+
         Ok(Statement::Import { filename })
     }
-    
+
     fn parse_export(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip EXPORT
-        
+
         let mut items = Vec::new();
-        
+
         // Parse list of identifiers to export
         while matches!(self.current_token, Token::Identifier(_)) {
             if let Token::Identifier(item) = &self.current_token {
@@ -1262,18 +1346,18 @@ impl Parser {
             }
             self.advance();
         }
-        
+
         if items.is_empty() {
             return Err("Expected items to export".to_string());
         }
-        
+
         let filename = if let Token::StringLiteral(name) = &self.current_token {
             name.clone()
         } else {
             return Err("Expected filename string after EXPORT items".to_string());
         };
         self.advance();
-        
+
         Ok(Statement::Export { items, filename })
     }
 
@@ -1283,7 +1367,7 @@ impl Parser {
 
     fn parse_logical_or(&mut self) -> Result<Expression, String> {
         let mut left = self.parse_logical_and()?;
-        
+
         while self.current_token == Token::Or {
             let operator = self.current_token.clone();
             self.advance();
@@ -1294,13 +1378,13 @@ impl Parser {
                 right: Box::new(right),
             };
         }
-        
+
         Ok(left)
     }
 
     fn parse_logical_and(&mut self) -> Result<Expression, String> {
         let mut left = self.parse_term()?;
-        
+
         while self.current_token == Token::And {
             let operator = self.current_token.clone();
             self.advance();
@@ -1311,13 +1395,13 @@ impl Parser {
                 right: Box::new(right),
             };
         }
-        
+
         Ok(left)
     }
 
     fn parse_term(&mut self) -> Result<Expression, String> {
         let mut left = self.parse_comparison()?;
-        
+
         while matches!(self.current_token, Token::Plus | Token::Minus) {
             let operator = self.current_token.clone();
             self.advance();
@@ -1328,17 +1412,22 @@ impl Parser {
                 right: Box::new(right),
             };
         }
-        
+
         Ok(left)
     }
 
     fn parse_comparison(&mut self) -> Result<Expression, String> {
         let mut left = self.parse_factor()?;
-        
-        while matches!(self.current_token, 
-            Token::Equal | Token::NotEqual | 
-            Token::Less | Token::Greater | 
-            Token::LessEqual | Token::GreaterEqual) {
+
+        while matches!(
+            self.current_token,
+            Token::Equal
+                | Token::NotEqual
+                | Token::Less
+                | Token::Greater
+                | Token::LessEqual
+                | Token::GreaterEqual
+        ) {
             let operator = self.current_token.clone();
             self.advance();
             let right = self.parse_factor()?;
@@ -1348,14 +1437,17 @@ impl Parser {
                 right: Box::new(right),
             };
         }
-        
+
         Ok(left)
     }
 
     fn parse_factor(&mut self) -> Result<Expression, String> {
         let mut left = self.parse_power()?;
-        
-        while matches!(self.current_token, Token::Star | Token::Slash | Token::Percent) {
+
+        while matches!(
+            self.current_token,
+            Token::Star | Token::Slash | Token::Percent
+        ) {
             let operator = self.current_token.clone();
             self.advance();
             let right = self.parse_power()?;
@@ -1365,13 +1457,13 @@ impl Parser {
                 right: Box::new(right),
             };
         }
-        
+
         Ok(left)
     }
 
     fn parse_power(&mut self) -> Result<Expression, String> {
         let mut left = self.parse_primary()?;
-        
+
         while self.current_token == Token::Power {
             let operator = self.current_token.clone();
             self.advance();
@@ -1382,7 +1474,7 @@ impl Parser {
                 right: Box::new(right),
             };
         }
-        
+
         Ok(left)
     }
 
@@ -1397,33 +1489,40 @@ impl Parser {
                 right: Box::new(expr),
             });
         }
-        
+
         match &self.current_token {
             Token::Number(n) => {
                 let num = *n;
                 self.advance();
                 Ok(Expression::Number(num))
             }
-            Token::Min | Token::Max | Token::Floor | Token::Ceil | Token::Round | Token::Random | Token::Length | Token::Size => {
+            Token::Min
+            | Token::Max
+            | Token::Floor
+            | Token::Ceil
+            | Token::Round
+            | Token::Random
+            | Token::Length
+            | Token::Size => {
                 let op = self.current_token.clone();
                 self.advance();
-                
+
                 if self.current_token != Token::LeftParen {
                     return Err(format!("Expected ( after {:?}", op));
                 }
                 self.advance();
-                
+
                 match op {
                     Token::Min | Token::Max => {
                         // Two-argument functions
                         let first_arg = self.parse_primary()?;
                         let second_arg = self.parse_primary()?;
-                        
+
                         if self.current_token != Token::RightParen {
                             return Err(format!("Expected ) after function arguments"));
                         }
                         self.advance();
-                        
+
                         Ok(Expression::BinaryOp {
                             left: Box::new(first_arg),
                             operator: op,
@@ -1433,12 +1532,12 @@ impl Parser {
                     Token::Floor | Token::Ceil | Token::Round => {
                         // Single-argument functions
                         let arg = self.parse_primary()?;
-                        
+
                         if self.current_token != Token::RightParen {
                             return Err(format!("Expected ) after function argument"));
                         }
                         self.advance();
-                        
+
                         Ok(Expression::BinaryOp {
                             left: Box::new(Expression::Number(0.0)), // Dummy left operand
                             operator: op,
@@ -1451,7 +1550,7 @@ impl Parser {
                             return Err(format!("Expected ) after RANDOM"));
                         }
                         self.advance();
-                        
+
                         Ok(Expression::BinaryOp {
                             left: Box::new(Expression::Number(0.0)), // Dummy left operand
                             operator: op,
@@ -1463,22 +1562,22 @@ impl Parser {
                         if let Token::StringLiteral(s) = &self.current_token {
                             let str_len = s.len() as f64;
                             self.advance();
-                            
+
                             if self.current_token != Token::RightParen {
                                 return Err(format!("Expected ) after LENGTH argument"));
                             }
                             self.advance();
-                            
+
                             Ok(Expression::Number(str_len))
                         } else if let Token::Identifier(name) = &self.current_token {
                             let var_name = name.clone();
                             self.advance();
-                            
+
                             if self.current_token != Token::RightParen {
                                 return Err(format!("Expected ) after LENGTH argument"));
                             }
                             self.advance();
-                            
+
                             // Store the identifier to be resolved at runtime
                             Ok(Expression::BinaryOp {
                                 left: Box::new(Expression::Recall(var_name)),
@@ -1489,7 +1588,7 @@ impl Parser {
                             return Err(format!("LENGTH expects string literal or identifier"));
                         }
                     }
-                    _ => unreachable!()
+                    _ => unreachable!(),
                 }
             }
             Token::Recall => {
@@ -1520,53 +1619,57 @@ impl Parser {
                 self.advance(); // Skip )
                 Ok(expr)
             }
-            _ => Err(format!("Unexpected token in expression: {:?}", self.current_token))
+            _ => Err(format!(
+                "Unexpected token in expression: {:?}",
+                self.current_token
+            )),
         }
     }
 
     fn parse_function_definition(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip FUNCTION
-        
+
         let function_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected function name after FUNCTION"));
         };
         self.advance();
-        
+
         let mut parameters = Vec::new();
-        
+
         // Parse optional parameters
         if self.current_token == Token::LeftParen {
             self.advance(); // Skip (
-            
+
             while self.current_token != Token::RightParen && self.current_token != Token::EOF {
                 if let Token::Identifier(param_name) = &self.current_token {
                     parameters.push(param_name.clone());
                     self.advance();
-                    
+
                     // Skip comma if present
-                    if self.current_token == Token::Plus { // Using + as comma separator
+                    if self.current_token == Token::Plus {
+                        // Using + as comma separator
                         self.advance();
                     }
                 } else {
                     return Err(format!("Expected parameter name"));
                 }
             }
-            
+
             if self.current_token != Token::RightParen {
                 return Err(format!("Expected ) after function parameters"));
             }
             self.advance(); // Skip )
         }
-        
+
         if self.current_token != Token::Do {
             return Err(format!("Expected DO after function signature"));
         }
         self.advance(); // Skip DO
-        
+
         let mut body = Vec::new();
-        
+
         while self.current_token != Token::End && self.current_token != Token::EOF {
             match self.current_token {
                 Token::Intent => body.push(self.parse_intent_declaration()?),
@@ -1580,91 +1683,94 @@ impl Parser {
                 Token::Return => body.push(self.parse_return()?),
                 Token::Call => body.push(self.parse_function_call()?),
                 _ => {
-                    return Err(format!("Unexpected token in function body: {:?}", self.current_token));
+                    return Err(format!(
+                        "Unexpected token in function body: {:?}",
+                        self.current_token
+                    ));
                 }
             }
         }
-        
+
         if self.current_token != Token::End {
             return Err(format!("Expected END to close FUNCTION"));
         }
         self.advance(); // Skip END
-        
-        Ok(Statement::FunctionDefinition { 
-            name: function_name, 
-            parameters, 
-            body 
+
+        Ok(Statement::FunctionDefinition {
+            name: function_name,
+            parameters,
+            body,
         })
     }
 
     fn parse_function_call(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip CALL
-        
+
         let function_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected function name after CALL"));
         };
         self.advance();
-        
+
         let mut arguments = Vec::new();
         let mut result_name = None;
-        
+
         // Parse optional arguments
         if self.current_token == Token::LeftParen {
             self.advance(); // Skip (
-            
+
             while self.current_token != Token::RightParen && self.current_token != Token::EOF {
                 arguments.push(self.parse_expression()?);
-                
+
                 // Skip comma if present
-                if self.current_token == Token::Plus { // Using + as comma separator
+                if self.current_token == Token::Plus {
+                    // Using + as comma separator
                     self.advance();
                 }
             }
-            
+
             if self.current_token != Token::RightParen {
                 return Err(format!("Expected ) after function arguments"));
             }
             self.advance(); // Skip )
         }
-        
+
         // Check for result variable (INTO identifier)
         if let Token::Identifier(var_name) = &self.current_token {
             result_name = Some(var_name.clone());
             self.advance();
         }
-        
-        Ok(Statement::FunctionCall { 
-            function_name, 
-            arguments, 
-            result_name 
+
+        Ok(Statement::FunctionCall {
+            function_name,
+            arguments,
+            result_name,
         })
     }
 
     fn parse_return(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip RETURN
-        
-        let value = if self.current_token == Token::EOF 
-            || self.current_token == Token::End {
+
+        let value = if self.current_token == Token::EOF || self.current_token == Token::End {
             None
         } else {
             Some(self.parse_expression()?)
         };
-        
+
         Ok(Statement::Return { value })
     }
 
     fn parse_array_sort(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip SORT
-        
+
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected array name after SORT"));
         };
         self.advance();
-        
+
         // Default to ascending, check for DESC keyword
         let mut ascending = true;
         if let Token::Identifier(order) = &self.current_token {
@@ -1675,137 +1781,155 @@ impl Parser {
                 self.advance(); // Skip explicit ASC
             }
         }
-        
-        Ok(Statement::ArraySort { array_name, ascending })
+
+        Ok(Statement::ArraySort {
+            array_name,
+            ascending,
+        })
     }
 
     fn parse_array_filter(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip FILTER
-        
+
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected array name after FILTER"));
         };
         self.advance();
-        
+
         let condition = self.parse_expression()?;
-        
+
         let result_array = if let Token::Identifier(result_name) = &self.current_token {
             result_name.clone()
         } else {
             return Err(format!("Expected result array name for FILTER"));
         };
         self.advance();
-        
-        Ok(Statement::ArrayFilter { array_name, condition, result_array })
+
+        Ok(Statement::ArrayFilter {
+            array_name,
+            condition,
+            result_array,
+        })
     }
 
     fn parse_array_reverse(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip REVERSE
-        
+
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected array name after REVERSE"));
         };
         self.advance();
-        
+
         Ok(Statement::ArrayReverse { array_name })
     }
 
     fn parse_array_map(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip MAP
-        
+
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected array name after MAP"));
         };
         self.advance();
-        
+
         let expression = self.parse_expression()?;
-        
+
         let result_array = if let Token::Identifier(result_name) = &self.current_token {
             result_name.clone()
         } else {
             return Err(format!("Expected result array name for MAP"));
         };
         self.advance();
-        
-        Ok(Statement::ArrayMap { array_name, expression, result_array })
+
+        Ok(Statement::ArrayMap {
+            array_name,
+            expression,
+            result_array,
+        })
     }
 
     fn parse_array_sum(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip SUM
-        
+
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected array name after SUM"));
         };
         self.advance();
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for SUM"));
         };
         self.advance();
-        
-        Ok(Statement::ArraySum { array_name, result_name })
+
+        Ok(Statement::ArraySum {
+            array_name,
+            result_name,
+        })
     }
 
     fn parse_array_join(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip JOIN
-        
+
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected array name after JOIN"));
         };
         self.advance();
-        
+
         let separator = if let Token::StringLiteral(sep) = &self.current_token {
             sep.clone()
         } else {
             return Err(format!("Expected separator string for JOIN"));
         };
         self.advance();
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for JOIN"));
         };
         self.advance();
-        
-        Ok(Statement::ArrayJoin { array_name, separator, result_name })
+
+        Ok(Statement::ArrayJoin {
+            array_name,
+            separator,
+            result_name,
+        })
     }
 
     fn parse_dict_create(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip DICT
-        
+
         let name = if let Token::Identifier(n) = &self.current_token {
             n.clone()
         } else {
             return Err(format!("Expected dictionary name after DICT"));
         };
         self.advance();
-        
+
         Ok(Statement::DictCreate { name })
     }
 
     fn parse_dict_put(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip PUT
-        
+
         let dict_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected dictionary name after PUT"));
         };
         self.advance();
-        
+
         let key = if let Token::StringLiteral(k) = &self.current_token {
             k.clone()
         } else if let Token::Identifier(k) = &self.current_token {
@@ -1814,22 +1938,26 @@ impl Parser {
             return Err(format!("Expected key for PUT"));
         };
         self.advance();
-        
+
         let value = self.parse_expression()?;
-        
-        Ok(Statement::DictPut { dict_name, key, value })
+
+        Ok(Statement::DictPut {
+            dict_name,
+            key,
+            value,
+        })
     }
 
     fn parse_dict_fetch(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip FETCH
-        
+
         let dict_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected dictionary name after FETCH"));
         };
         self.advance();
-        
+
         let key = if let Token::StringLiteral(k) = &self.current_token {
             k.clone()
         } else if let Token::Identifier(k) = &self.current_token {
@@ -1838,67 +1966,77 @@ impl Parser {
             return Err(format!("Expected key for FETCH"));
         };
         self.advance();
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for FETCH"));
         };
         self.advance();
-        
-        Ok(Statement::DictFetch { dict_name, key, result_name })
+
+        Ok(Statement::DictFetch {
+            dict_name,
+            key,
+            result_name,
+        })
     }
 
     fn parse_dict_keys(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip KEYS
-        
+
         let dict_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected dictionary name after KEYS"));
         };
         self.advance();
-        
+
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result array name for KEYS"));
         };
         self.advance();
-        
-        Ok(Statement::DictKeys { dict_name, result_array })
+
+        Ok(Statement::DictKeys {
+            dict_name,
+            result_array,
+        })
     }
 
     fn parse_dict_values(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip VALUES
-        
+
         let dict_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected dictionary name after VALUES"));
         };
         self.advance();
-        
+
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result array name for VALUES"));
         };
         self.advance();
-        
-        Ok(Statement::DictValues { dict_name, result_array })
+
+        Ok(Statement::DictValues {
+            dict_name,
+            result_array,
+        })
     }
 
     fn parse_dict_delete(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip DELETE
-        
+
         let dict_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected dictionary name after DELETE"));
         };
         self.advance();
-        
+
         let key = if let Token::StringLiteral(k) = &self.current_token {
             k.clone()
         } else if let Token::Identifier(k) = &self.current_token {
@@ -1907,7 +2045,7 @@ impl Parser {
             return Err(format!("Expected key for DELETE"));
         };
         self.advance();
-        
+
         Ok(Statement::DictDelete { dict_name, key })
     }
 
@@ -1915,21 +2053,26 @@ impl Parser {
         self.advance(); // Skip RANGE
         let start = self.parse_expression()?;
         let end = self.parse_expression()?;
-        
+
         let step = if matches!(self.current_token, Token::Number(_) | Token::Minus) {
             Some(self.parse_expression()?)
         } else {
             None
         };
-        
+
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result array name for RANGE"));
         };
         self.advance();
-        
-        Ok(Statement::Range { start, end, step, result_array })
+
+        Ok(Statement::Range {
+            start,
+            end,
+            step,
+            result_array,
+        })
     }
 
     fn parse_unique(&mut self) -> Result<Statement, String> {
@@ -1940,15 +2083,18 @@ impl Parser {
             return Err(format!("Expected array name after UNIQUE"));
         };
         self.advance();
-        
+
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result array name for UNIQUE"));
         };
         self.advance();
-        
-        Ok(Statement::Unique { array_name, result_array })
+
+        Ok(Statement::Unique {
+            array_name,
+            result_array,
+        })
     }
 
     fn parse_concat(&mut self) -> Result<Statement, String> {
@@ -1959,22 +2105,26 @@ impl Parser {
             return Err(format!("Expected first array name after CONCAT"));
         };
         self.advance();
-        
+
         let array2 = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected second array name for CONCAT"));
         };
         self.advance();
-        
+
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result array name for CONCAT"));
         };
         self.advance();
-        
-        Ok(Statement::Concat { array1, array2, result_array })
+
+        Ok(Statement::Concat {
+            array1,
+            array2,
+            result_array,
+        })
     }
 
     fn parse_take(&mut self) -> Result<Statement, String> {
@@ -1985,17 +2135,21 @@ impl Parser {
             return Err(format!("Expected array name after TAKE"));
         };
         self.advance();
-        
+
         let count = self.parse_expression()?;
-        
+
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result array name for TAKE"));
         };
         self.advance();
-        
-        Ok(Statement::Take { array_name, count, result_array })
+
+        Ok(Statement::Take {
+            array_name,
+            count,
+            result_array,
+        })
     }
 
     fn parse_drop(&mut self) -> Result<Statement, String> {
@@ -2006,17 +2160,21 @@ impl Parser {
             return Err(format!("Expected array name after DROP"));
         };
         self.advance();
-        
+
         let count = self.parse_expression()?;
-        
+
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result array name for DROP"));
         };
         self.advance();
-        
-        Ok(Statement::Drop { array_name, count, result_array })
+
+        Ok(Statement::Drop {
+            array_name,
+            count,
+            result_array,
+        })
     }
 
     fn parse_find(&mut self) -> Result<Statement, String> {
@@ -2027,17 +2185,21 @@ impl Parser {
             return Err(format!("Expected array name after FIND"));
         };
         self.advance();
-        
+
         let condition = self.parse_expression()?;
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for FIND"));
         };
         self.advance();
-        
-        Ok(Statement::Find { array_name, condition, result_name })
+
+        Ok(Statement::Find {
+            array_name,
+            condition,
+            result_name,
+        })
     }
 
     fn parse_average(&mut self) -> Result<Statement, String> {
@@ -2048,15 +2210,18 @@ impl Parser {
             return Err(format!("Expected array name after AVERAGE"));
         };
         self.advance();
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for AVERAGE"));
         };
         self.advance();
-        
-        Ok(Statement::Average { array_name, result_name })
+
+        Ok(Statement::Average {
+            array_name,
+            result_name,
+        })
     }
 
     fn parse_clear(&mut self) -> Result<Statement, String> {
@@ -2067,7 +2232,7 @@ impl Parser {
             return Err(format!("Expected target name after CLEAR"));
         };
         self.advance();
-        
+
         Ok(Statement::Clear { target })
     }
 
@@ -2079,7 +2244,7 @@ impl Parser {
             return Err(format!("Expected array name after SHUFFLE"));
         };
         self.advance();
-        
+
         Ok(Statement::Shuffle { array_name })
     }
 
@@ -2091,48 +2256,53 @@ impl Parser {
             return Err(format!("Expected source name after CLONE"));
         };
         self.advance();
-        
+
         let destination = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected destination name for CLONE"));
         };
         self.advance();
-        
-        Ok(Statement::Clone { source, destination })
-    }
 
+        Ok(Statement::Clone {
+            source,
+            destination,
+        })
+    }
 
     fn parse_read_file(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip READ_FILE
-        
+
         let filename = if let Token::StringLiteral(f) = &self.current_token {
             f.clone()
         } else {
             return Err(format!("Expected filename string after READ_FILE"));
         };
         self.advance();
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for READ_FILE"));
         };
         self.advance();
-        
-        Ok(Statement::ReadFile { filename, result_name })
+
+        Ok(Statement::ReadFile {
+            filename,
+            result_name,
+        })
     }
 
     fn parse_write_file(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip WRITE_FILE
-        
+
         let filename = if let Token::StringLiteral(f) = &self.current_token {
             f.clone()
         } else {
             return Err(format!("Expected filename string after WRITE_FILE"));
         };
         self.advance();
-        
+
         let content = if let Token::StringLiteral(c) = &self.current_token {
             c.clone()
         } else if let Token::Identifier(var) = &self.current_token {
@@ -2141,20 +2311,20 @@ impl Parser {
             return Err(format!("Expected content for WRITE_FILE"));
         };
         self.advance();
-        
+
         Ok(Statement::WriteFile { filename, content })
     }
 
     fn parse_append_file(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip APPEND_FILE
-        
+
         let filename = if let Token::StringLiteral(f) = &self.current_token {
             f.clone()
         } else {
             return Err(format!("Expected filename string after APPEND_FILE"));
         };
         self.advance();
-        
+
         let content = if let Token::StringLiteral(c) = &self.current_token {
             c.clone()
         } else if let Token::Identifier(var) = &self.current_token {
@@ -2163,81 +2333,90 @@ impl Parser {
             return Err(format!("Expected content for APPEND_FILE"));
         };
         self.advance();
-        
+
         Ok(Statement::AppendFile { filename, content })
     }
 
     fn parse_file_exists(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip EXISTS
-        
+
         let filename = if let Token::StringLiteral(f) = &self.current_token {
             f.clone()
         } else {
             return Err(format!("Expected filename string after EXISTS"));
         };
         self.advance();
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for EXISTS"));
         };
         self.advance();
-        
-        Ok(Statement::FileExists { filename, result_name })
+
+        Ok(Statement::FileExists {
+            filename,
+            result_name,
+        })
     }
 
     fn parse_sleep(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip SLEEP
-        
+
         let milliseconds = self.parse_expression()?;
-        
+
         Ok(Statement::Sleep { milliseconds })
     }
 
     fn parse_input(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip INPUT
-        
+
         let prompt = if let Token::StringLiteral(p) = &self.current_token {
             p.clone()
         } else {
             return Err(format!("Expected prompt string after INPUT"));
         };
         self.advance();
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for INPUT"));
         };
         self.advance();
-        
-        Ok(Statement::Input { prompt, result_name })
+
+        Ok(Statement::Input {
+            prompt,
+            result_name,
+        })
     }
 
     fn parse_get_type(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip TYPE
-        
+
         let variable = if let Token::Identifier(v) = &self.current_token {
             v.clone()
         } else {
             return Err(format!("Expected variable name after TYPE"));
         };
         self.advance();
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for TYPE"));
         };
         self.advance();
-        
-        Ok(Statement::GetType { variable, result_name })
+
+        Ok(Statement::GetType {
+            variable,
+            result_name,
+        })
     }
 
     fn parse_parse_number(&mut self) -> Result<Statement, String> {
         self.advance(); // Skip PARSE
-        
+
         let source = if let Token::Identifier(s) = &self.current_token {
             s.clone()
         } else if let Token::StringLiteral(s) = &self.current_token {
@@ -2246,15 +2425,18 @@ impl Parser {
             return Err(format!("Expected source for PARSE"));
         };
         self.advance();
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for PARSE"));
         };
         self.advance();
-        
-        Ok(Statement::ParseNumber { source, result_name })
+
+        Ok(Statement::ParseNumber {
+            source,
+            result_name,
+        })
     }
 
     fn parse_fold(&mut self) -> Result<Statement, String> {
@@ -2265,18 +2447,23 @@ impl Parser {
             return Err(format!("Expected array name after FOLD"));
         };
         self.advance();
-        
+
         let initial = self.parse_expression()?;
         let operation = self.parse_expression()?;
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for FOLD"));
         };
         self.advance();
-        
-        Ok(Statement::Fold { array_name, initial, operation, result_name })
+
+        Ok(Statement::Fold {
+            array_name,
+            initial,
+            operation,
+            result_name,
+        })
     }
 
     fn parse_zip(&mut self) -> Result<Statement, String> {
@@ -2287,22 +2474,26 @@ impl Parser {
             return Err(format!("Expected first array name after ZIP"));
         };
         self.advance();
-        
+
         let array2 = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected second array name for ZIP"));
         };
         self.advance();
-        
+
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result array name for ZIP"));
         };
         self.advance();
-        
-        Ok(Statement::Zip { array1, array2, result_array })
+
+        Ok(Statement::Zip {
+            array1,
+            array2,
+            result_array,
+        })
     }
 
     fn parse_flatten(&mut self) -> Result<Statement, String> {
@@ -2313,15 +2504,18 @@ impl Parser {
             return Err(format!("Expected array name after FLATTEN"));
         };
         self.advance();
-        
+
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result array name for FLATTEN"));
         };
         self.advance();
-        
-        Ok(Statement::Flatten { array_name, result_array })
+
+        Ok(Statement::Flatten {
+            array_name,
+            result_array,
+        })
     }
 
     fn parse_count(&mut self) -> Result<Statement, String> {
@@ -2332,17 +2526,21 @@ impl Parser {
             return Err(format!("Expected array name after COUNT"));
         };
         self.advance();
-        
+
         let condition = self.parse_expression()?;
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for COUNT"));
         };
         self.advance();
-        
-        Ok(Statement::Count { array_name, condition, result_name })
+
+        Ok(Statement::Count {
+            array_name,
+            condition,
+            result_name,
+        })
     }
 
     fn parse_replace(&mut self) -> Result<Statement, String> {
@@ -2353,29 +2551,34 @@ impl Parser {
             return Err(format!("Expected target string after REPLACE"));
         };
         self.advance();
-        
+
         let pattern = if let Token::StringLiteral(p) = &self.current_token {
             p.clone()
         } else {
             return Err(format!("Expected pattern string for REPLACE"));
         };
         self.advance();
-        
+
         let replacement = if let Token::StringLiteral(r) = &self.current_token {
             r.clone()
         } else {
             return Err(format!("Expected replacement string for REPLACE"));
         };
         self.advance();
-        
+
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result variable name for REPLACE"));
         };
         self.advance();
-        
-        Ok(Statement::Replace { text, pattern, replacement, result_name })
+
+        Ok(Statement::Replace {
+            text,
+            pattern,
+            replacement,
+            result_name,
+        })
     }
 
     fn parse_split(&mut self) -> Result<Statement, String> {
@@ -2386,21 +2589,25 @@ impl Parser {
             return Err(format!("Expected string variable after SPLIT"));
         };
         self.advance();
-        
+
         let delimiter = if let Token::StringLiteral(d) = &self.current_token {
             d.clone()
         } else {
             return Err(format!("Expected delimiter string for SPLIT"));
         };
         self.advance();
-        
+
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
             return Err(format!("Expected result array name for SPLIT"));
         };
         self.advance();
-        
-        Ok(Statement::Split { text, delimiter, result_array })
+
+        Ok(Statement::Split {
+            text,
+            delimiter,
+            result_array,
+        })
     }
 }

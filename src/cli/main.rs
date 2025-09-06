@@ -5,19 +5,19 @@ use std::fs;
 
 pub fn run() {
     let args: Vec<String> = env::args().collect();
-    
+
     if args.len() != 2 {
         eprintln!("Usage: {} <file.anubhav>", args[0]);
         std::process::exit(1);
     }
-    
+
     let filename = &args[1];
-    let content = fs::read_to_string(filename)
-        .expect(&format!("Failed to read file: {}", filename));
-    
+    let content =
+        fs::read_to_string(filename).expect(&format!("Failed to read file: {}", filename));
+
     let lexer = Lexer::new(content);
     let mut parser = Parser::new(lexer);
-    
+
     match parser.parse() {
         Ok(statements) => {
             let mut interpreter = Interpreter::new();

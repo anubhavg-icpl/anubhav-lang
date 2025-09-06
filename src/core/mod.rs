@@ -1,4 +1,4 @@
-pub mod interpreter;
 pub mod extensions;
+pub mod interpreter;
 
 pub use interpreter::Interpreter;
