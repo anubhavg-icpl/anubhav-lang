@@ -80,6 +80,27 @@ pub enum Statement {
         cases: Vec<(Expression, Vec<Statement>)>,
         default_case: Option<Vec<Statement>>,
     },
+    ArrayCreate {
+        name: String,
+    },
+    ArrayPush {
+        array_name: String,
+        value: Expression,
+    },
+    ArrayPop {
+        array_name: String,
+        result_name: String,
+    },
+    ArrayGet {
+        array_name: String,
+        index: Expression,
+        result_name: String,
+    },
+    ArraySet {
+        array_name: String,
+        index: Expression,
+        value: Expression,
+    },
 }
 
 pub struct Parser {
@@ -152,6 +173,21 @@ impl Parser {
                 }
                 Token::Switch => {
                     statements.push(self.parse_switch()?);
+                }
+                Token::Array => {
+                    statements.push(self.parse_array_create()?);
+                }
+                Token::Push => {
+                    statements.push(self.parse_array_push()?);
+                }
+                Token::Pop => {
+                    statements.push(self.parse_array_pop()?);
+                }
+                Token::Get => {
+                    statements.push(self.parse_array_get()?);
+                }
+                Token::Set => {
+                    statements.push(self.parse_array_set()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -503,6 +539,11 @@ impl Parser {
                 Token::Increment => body.push(self.parse_increment()?),
                 Token::Decrement => body.push(self.parse_decrement()?),
                 Token::For => body.push(self.parse_for()?),
+                Token::Array => body.push(self.parse_array_create()?),
+                Token::Push => body.push(self.parse_array_push()?),
+                Token::Pop => body.push(self.parse_array_pop()?),
+                Token::Get => body.push(self.parse_array_get()?),
+                Token::Set => body.push(self.parse_array_set()?),
                 _ => {
                     return Err(format!("Unexpected token in FOR body: {:?}", self.current_token));
                 }
@@ -729,6 +770,93 @@ impl Parser {
         
         Ok(Statement::Switch { expression, cases, default_case })
     }
+    
+    fn parse_array_create(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip ARRAY
+        
+        let name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err("Expected identifier after ARRAY".to_string());
+        };
+        self.advance();
+        
+        Ok(Statement::ArrayCreate { name })
+    }
+    
+    fn parse_array_push(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip PUSH
+        
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err("Expected array name after PUSH".to_string());
+        };
+        self.advance();
+        
+        let value = self.parse_expression()?;
+        
+        Ok(Statement::ArrayPush { array_name, value })
+    }
+    
+    fn parse_array_pop(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip POP
+        
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err("Expected array name after POP".to_string());
+        };
+        self.advance();
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err("Expected result variable name after POP array".to_string());
+        };
+        self.advance();
+        
+        Ok(Statement::ArrayPop { array_name, result_name })
+    }
+    
+    fn parse_array_get(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip GET
+        
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err("Expected array name after GET".to_string());
+        };
+        self.advance();
+        
+        let index = self.parse_expression()?;
+        
+        let result_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err("Expected result variable name after GET index".to_string());
+        };
+        self.advance();
+        
+        Ok(Statement::ArrayGet { array_name, index, result_name })
+    }
+    
+    fn parse_array_set(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip SET
+        
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err("Expected array name after SET".to_string());
+        };
+        self.advance();
+        
+        let index = self.parse_expression()?;
+        
+        let value = self.parse_expression()?;
+        
+        Ok(Statement::ArraySet { array_name, index, value })
+    }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {
         self.parse_logical_or()
@@ -857,7 +985,7 @@ impl Parser {
                 self.advance();
                 Ok(Expression::Number(num))
             }
-            Token::Min | Token::Max | Token::Floor | Token::Ceil | Token::Round | Token::Random | Token::Length => {
+            Token::Min | Token::Max | Token::Floor | Token::Ceil | Token::Round | Token::Random | Token::Length | Token::Size => {
                 let op = self.current_token.clone();
                 self.advance();
                 
@@ -911,7 +1039,7 @@ impl Parser {
                             right: Box::new(Expression::Number(0.0)), // Dummy right operand
                         })
                     }
-                    Token::Length => {
+                    Token::Size | Token::Length => {
                         // String function - takes string literal or identifier
                         if let Token::StringLiteral(s) = &self.current_token {
                             let str_len = s.len() as f64;

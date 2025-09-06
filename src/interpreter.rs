@@ -6,6 +6,7 @@ pub struct Interpreter {
     intents: HashMap<String, String>,
     calculations: HashMap<String, f64>,
     variables: HashMap<String, f64>,
+    arrays: HashMap<String, Vec<f64>>,
     random_seed: u64,
 }
 
@@ -15,6 +16,7 @@ impl Interpreter {
             intents: HashMap::new(),
             calculations: HashMap::new(),
             variables: HashMap::new(),
+            arrays: HashMap::new(),
             random_seed: 12345, // Initial seed
         }
     }
@@ -207,6 +209,53 @@ impl Interpreter {
                         }
                     }
                 }
+                Statement::ArrayCreate { name } => {
+                    self.arrays.insert(name.clone(), Vec::new());
+                }
+                Statement::ArrayPush { array_name, value } => {
+                    let val = self.evaluate_expression(&value)?;
+                    if let Some(array) = self.arrays.get_mut(&array_name) {
+                        array.push(val);
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::ArrayPop { array_name, result_name } => {
+                    if let Some(array) = self.arrays.get_mut(&array_name) {
+                        if let Some(val) = array.pop() {
+                            self.variables.insert(result_name.clone(), val);
+                        } else {
+                            return Err(format!("Array '{}' is empty", array_name));
+                        }
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::ArrayGet { array_name, index, result_name } => {
+                    let idx = self.evaluate_expression(&index)? as usize;
+                    if let Some(array) = self.arrays.get(&array_name) {
+                        if idx < array.len() {
+                            self.variables.insert(result_name.clone(), array[idx]);
+                        } else {
+                            return Err(format!("Array index {} out of bounds for array '{}'", idx, array_name));
+                        }
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::ArraySet { array_name, index, value } => {
+                    let idx = self.evaluate_expression(&index)? as usize;
+                    let val = self.evaluate_expression(&value)?;
+                    if let Some(array) = self.arrays.get_mut(&array_name) {
+                        if idx < array.len() {
+                            array[idx] = val;
+                        } else {
+                            return Err(format!("Array index {} out of bounds for array '{}'", idx, array_name));
+                        }
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
             }
         }
         Ok(())
@@ -279,6 +328,18 @@ impl Interpreter {
                             }
                         } else {
                             Err("LENGTH function error".to_string())
+                        }
+                    }
+                    Token::Size => {
+                        // SIZE function - get array size
+                        if let Expression::Recall(name) = &**left {
+                            if let Some(array) = self.arrays.get(name) {
+                                Ok(array.len() as f64)
+                            } else {
+                                Err(format!("Array '{}' not found for SIZE", name))
+                            }
+                        } else {
+                            Err("SIZE function error".to_string())
                         }
                     }
                     _ => Err(format!("Invalid operator: {:?}", operator))

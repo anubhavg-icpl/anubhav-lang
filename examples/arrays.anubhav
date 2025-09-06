@@ -1,0 +1,67 @@
+# ARRAY data structure examples
+PRINT "Testing ARRAY operations"
+
+# Create a new array
+ARRAY numbers
+
+# Push some values
+PUSH numbers 10
+PUSH numbers 20
+PUSH numbers 30
+PUSH numbers 40
+
+PRINT "Pushed 4 elements to array"
+
+# Get elements by index
+GET numbers 0 first_element
+GET numbers 1 second_element
+GET numbers 3 last_element
+
+PRINT "First element (index 0):" first_element
+PRINT "Second element (index 1):" second_element 
+PRINT "Last element (index 3):" last_element
+
+# Modify elements
+SET numbers 1 99
+GET numbers 1 modified_element
+PRINT "Modified second element:" modified_element
+
+# Pop elements
+POP numbers popped_value
+PRINT "Popped value:" popped_value
+
+# Array operations in a loop
+PRINT "Adding numbers 1-5 to array:"
+ARRAY sequence
+FOR i 1 TO 5 DO
+    PUSH sequence RECALL i
+END
+
+# Print all elements
+PRINT "Sequence array elements:"
+
+FOR idx 0 TO 4 DO
+    GET sequence RECALL idx element
+    PRINT "Element at index" idx ":" element
+END
+
+# Using arrays with calculations
+PRINT "Sum of sequence array:"
+STORE sum 0
+FOR i 0 TO 4 DO
+    GET sequence RECALL i value
+    CALCULATE sum RECALL sum + RECALL value
+END
+PRINT "Total sum:" sum
+
+# Testing array with simple numbers
+PRINT "Array with simple numbers:"
+ARRAY simple_nums
+PUSH simple_nums 100
+PUSH simple_nums 200
+PUSH simple_nums 300
+
+FOR i 0 TO 2 DO
+    GET simple_nums RECALL i simple_element
+    PRINT "Simple element" i ":" simple_element
+END
