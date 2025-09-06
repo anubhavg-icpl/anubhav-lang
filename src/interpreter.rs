@@ -137,6 +137,13 @@ impl Interpreter {
                             Ok(left_val / right_val)
                         }
                     }
+                    Token::Percent => {
+                        if right_val == 0.0 {
+                            Err("Modulo by zero".to_string())
+                        } else {
+                            Ok(left_val % right_val)
+                        }
+                    }
                     Token::Equal => Ok(if left_val == right_val { 1.0 } else { 0.0 }),
                     Token::NotEqual => Ok(if left_val != right_val { 1.0 } else { 0.0 }),
                     Token::Less => Ok(if left_val < right_val { 1.0 } else { 0.0 }),

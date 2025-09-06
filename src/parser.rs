@@ -456,7 +456,7 @@ impl Parser {
     fn parse_factor(&mut self) -> Result<Expression, String> {
         let mut left = self.parse_primary()?;
         
-        while matches!(self.current_token, Token::Star | Token::Slash) {
+        while matches!(self.current_token, Token::Star | Token::Slash | Token::Percent) {
             let operator = self.current_token.clone();
             self.advance();
             let right = self.parse_primary()?;

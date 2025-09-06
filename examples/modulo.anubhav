@@ -1,0 +1,36 @@
+# Modulo operator examples
+CALCULATE remainder 17 % 5
+PRINT "17 % 5 =" remainder
+
+# Check if number is even or odd
+STORE number 42
+CALCULATE is_even RECALL number % 2
+
+IF RECALL is_even == 0 THEN
+    PRINT number "is even"
+ELSE
+    PRINT number "is odd"
+END
+
+# FizzBuzz with modulo
+STORE i 1
+WHILE RECALL i <= 15 DO
+    CALCULATE mod3 RECALL i % 3
+    CALCULATE mod5 RECALL i % 5
+    
+    IF RECALL mod3 == 0 AND RECALL mod5 == 0 THEN
+        PRINT i "FizzBuzz"
+    ELSE
+        IF RECALL mod3 == 0 THEN
+            PRINT i "Fizz"
+        ELSE
+            IF RECALL mod5 == 0 THEN
+                PRINT i "Buzz"
+            ELSE
+                PRINT i
+            END
+        END
+    END
+    
+    STORE i RECALL i + 1
+END

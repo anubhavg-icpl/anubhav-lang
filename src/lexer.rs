@@ -23,6 +23,7 @@ pub enum Token {
     Minus,
     Star,
     Slash,
+    Percent,
     LeftParen,
     RightParen,
     Equal,
@@ -145,6 +146,10 @@ impl Lexer {
             Some('/') => {
                 self.advance();
                 Token::Slash
+            }
+            Some('%') => {
+                self.advance();
+                Token::Percent
             }
             Some('=') => {
                 self.advance();
