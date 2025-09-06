@@ -33,6 +33,10 @@ pub enum Statement {
         name: String,
         parts: Vec<String>,
     },
+    Repeat {
+        count: Expression,
+        body: Vec<Statement>,
+    },
 }
 
 pub struct Parser {
@@ -72,6 +76,9 @@ impl Parser {
                 }
                 Token::Combine => {
                     statements.push(self.parse_combine()?);
+                }
+                Token::Repeat => {
+                    statements.push(self.parse_repeat()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -190,6 +197,44 @@ impl Parser {
         }
         
         Ok(Statement::Combine { name, parts })
+    }
+
+    fn parse_repeat(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip REPEAT
+        
+        let count = self.parse_expression()?;
+        
+        if self.current_token != Token::Times {
+            return Err(format!("Expected TIMES after repeat count"));
+        }
+        self.advance(); // Skip TIMES
+        
+        if self.current_token != Token::Do {
+            return Err(format!("Expected DO after TIMES"));
+        }
+        self.advance(); // Skip DO
+        
+        let mut body = Vec::new();
+        
+        while self.current_token != Token::End && self.current_token != Token::EOF {
+            match self.current_token {
+                Token::Intent => body.push(self.parse_intent_declaration()?),
+                Token::Manifest => body.push(self.parse_manifest_call()?),
+                Token::Calculate => body.push(self.parse_calculate()?),
+                Token::Store => body.push(self.parse_store()?),
+                Token::Combine => body.push(self.parse_combine()?),
+                _ => {
+                    return Err(format!("Unexpected token in repeat body: {:?}", self.current_token));
+                }
+            }
+        }
+        
+        if self.current_token != Token::End {
+            return Err(format!("Expected END to close REPEAT"));
+        }
+        self.advance(); // Skip END
+        
+        Ok(Statement::Repeat { count, body })
     }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {

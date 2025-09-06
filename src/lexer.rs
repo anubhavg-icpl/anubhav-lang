@@ -7,6 +7,10 @@ pub enum Token {
     Store,
     Recall,
     Combine,
+    Repeat,
+    Times,
+    Do,
+    End,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -193,6 +197,10 @@ impl Lexer {
                     "STORE" => Token::Store,
                     "RECALL" => Token::Recall,
                     "COMBINE" => Token::Combine,
+                    "REPEAT" => Token::Repeat,
+                    "TIMES" => Token::Times,
+                    "DO" => Token::Do,
+                    "END" => Token::End,
                     _ => Token::Identifier(identifier),
                 }
             }

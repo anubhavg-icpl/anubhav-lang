@@ -1,0 +1,13 @@
+# Simple repeat loop
+REPEAT 3 TIMES DO
+    INTENT msg "Hello from loop!"
+    MANIFEST msg
+END
+
+# Repeat with calculation
+STORE counter 0
+REPEAT 5 TIMES DO
+    STORE counter RECALL counter + 1
+    CALCULATE square RECALL counter * RECALL counter
+    MANIFEST square
+END

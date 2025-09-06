@@ -68,6 +68,12 @@ impl Interpreter {
                     }
                     self.intents.insert(name, combined);
                 }
+                Statement::Repeat { count, body } => {
+                    let times = self.evaluate_expression(&count)? as usize;
+                    for _ in 0..times {
+                        self.execute(body.clone())?;
+                    }
+                }
             }
         }
         Ok(())
