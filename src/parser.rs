@@ -205,6 +205,81 @@ pub enum Statement {
         source: String,
         result_name: String,
     },
+    Range {
+        start: Expression,
+        end: Expression,
+        step: Option<Expression>,
+        result_array: String,
+    },
+    Fold {
+        array_name: String,
+        initial: Expression,
+        operation: Expression,
+        result_name: String,
+    },
+    Unique {
+        array_name: String,
+        result_array: String,
+    },
+    Concat {
+        array1: String,
+        array2: String,
+        result_array: String,
+    },
+    Take {
+        array_name: String,
+        count: Expression,
+        result_array: String,
+    },
+    Drop {
+        array_name: String,
+        count: Expression,
+        result_array: String,
+    },
+    Zip {
+        array1: String,
+        array2: String,
+        result_array: String,
+    },
+    Flatten {
+        array_name: String,
+        result_array: String,
+    },
+    Find {
+        array_name: String,
+        condition: Expression,
+        result_name: String,
+    },
+    Count {
+        array_name: String,
+        condition: Expression,
+        result_name: String,
+    },
+    Average {
+        array_name: String,
+        result_name: String,
+    },
+    Replace {
+        text: String,
+        pattern: String,
+        replacement: String,
+        result_name: String,
+    },
+    Split {
+        text: String,
+        delimiter: String,
+        result_array: String,
+    },
+    Clear {
+        target: String,
+    },
+    Shuffle {
+        array_name: String,
+    },
+    Clone {
+        source: String,
+        destination: String,
+    },
 }
 
 pub struct Parser {

@@ -511,6 +511,10 @@ impl Interpreter {
                         return Err(format!("Array '{}' not found", array_name));
                     }
                 }
+                _ => {
+                    // Future features - not yet implemented
+                    return Err(format!("Feature not yet implemented"));
+                }
             }
         }
         Ok(())

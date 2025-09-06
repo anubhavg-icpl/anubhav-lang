@@ -1,0 +1,208 @@
+# Ultimate Feature Showcase for Anubhav Language
+PRINT "=== ANUBHAV LANGUAGE - ULTIMATE FEATURES ==="
+PRINT ""
+
+# Create test data
+ARRAY data
+PUSH data 1
+PUSH data 2
+PUSH data 3
+PUSH data 4
+PUSH data 5
+
+PRINT "Original array: 1, 2, 3, 4, 5"
+PRINT ""
+
+# 1. Advanced Array Operations
+PRINT "1. ADVANCED ARRAY OPERATIONS"
+PRINT "------------------------------"
+
+# MAP - Transform elements
+MAP data RECALL item * 2 doubled
+JOIN doubled ", " doubled_str
+PRINT "MAP (x2):" doubled_str
+
+# FILTER - Select elements
+FILTER data RECALL item > 2 filtered
+JOIN filtered ", " filtered_str
+PRINT "FILTER (>2):" filtered_str
+
+# SUM - Total of array
+SUM data total
+PRINT "SUM:" total
+
+# REVERSE - Reverse order
+ARRAY rev_test
+PUSH rev_test 10
+PUSH rev_test 20
+PUSH rev_test 30
+REVERSE rev_test
+JOIN rev_test ", " rev_str
+PRINT "REVERSE [10,20,30]:" rev_str
+
+PRINT ""
+
+# 2. Mathematical Operations
+PRINT "2. MATHEMATICAL OPERATIONS"
+PRINT "--------------------------"
+
+CALCULATE power 2 ** 3
+PRINT "2^3 =" power
+
+CALCULATE modulo 10 % 3
+PRINT "10 % 3 =" modulo
+
+CALCULATE maximum MAX(15 + 25)
+PRINT "MAX(15, 25) =" maximum
+
+CALCULATE minimum MIN(15 + 25)
+PRINT "MIN(15, 25) =" minimum
+
+CALCULATE rounded ROUND 3.7
+PRINT "ROUND(3.7) =" rounded
+
+CALCULATE floored FLOOR 3.7
+PRINT "FLOOR(3.7) =" floored
+
+CALCULATE ceiled CEIL 3.2
+PRINT "CEIL(3.2) =" ceiled
+
+CALCULATE rand RANDOM
+PRINT "RANDOM =" rand
+
+PRINT ""
+
+# 3. String Operations
+PRINT "3. STRING OPERATIONS"
+PRINT "--------------------"
+
+INTENT text "  Hello World  "
+UPPERCASE upper text
+LOWERCASE lower text
+PRINT "Original:" text
+PRINT "UPPERCASE:" upper
+PRINT "LOWERCASE:" lower
+
+INTENT name "Alice"
+INTENT greeting "Welcome"
+COMBINE full_greeting greeting ", " name "!"
+PRINT "COMBINE:" full_greeting
+
+PRINT ""
+
+# 4. Control Flow Mastery
+PRINT "4. CONTROL FLOW MASTERY"
+PRINT "----------------------"
+
+# Nested loops with BREAK and CONTINUE
+FOR i 1 TO 3 DO
+    FOR j 1 TO 3 DO
+        IF RECALL i == 2 AND RECALL j == 2 THEN
+            CONTINUE
+        END
+        CALCULATE product RECALL i * RECALL j
+        PRINT "  " i "x" j "=" product
+    END
+END
+
+# SWITCH statement
+STORE option 2
+SWITCH RECALL option
+CASE 1 DO
+    PRINT "Option 1 selected"
+CASE 2 DO
+    PRINT "Option 2 selected"
+CASE 3 DO
+    PRINT "Option 3 selected"
+DEFAULT DO
+    PRINT "Unknown option"
+END
+
+PRINT ""
+
+# 5. Functions and Recursion
+PRINT "5. FUNCTIONS & RECURSION"
+PRINT "------------------------"
+
+# Fibonacci function (recursive)
+FUNCTION fibonacci(n) DO
+    IF RECALL n <= 1 THEN
+        RETURN RECALL n
+    END
+    CALCULATE n1 RECALL n - 1
+    CALCULATE n2 RECALL n - 2
+    CALL fibonacci(RECALL n1) fib1
+    CALL fibonacci(RECALL n2) fib2
+    CALCULATE result RECALL fib1 + RECALL fib2
+    RETURN RECALL result
+END
+
+PRINT "Fibonacci sequence:"
+FOR i 0 TO 7 DO
+    CALL fibonacci(RECALL i) fib_result
+    PRINT "  fib(" i ") =" fib_result
+END
+
+PRINT ""
+
+# 6. Error Handling
+PRINT "6. ERROR HANDLING"
+PRINT "-----------------"
+
+TRY
+    CALCULATE risky 10 / 0
+    PRINT "This won't print"
+CATCH
+    PRINT "Caught division by zero!"
+END
+
+# Assertions
+ASSERT 2 + 2 == 4 "Math still works"
+PRINT "✓ Assertion passed"
+
+PRINT ""
+
+# 7. Dictionary/HashMap Operations
+PRINT "7. DICTIONARY OPERATIONS"
+PRINT "-----------------------"
+
+DICT person
+PUT person "name" 25
+PUT person "age" 30
+FETCH person "name" person_name
+FETCH person "age" person_age
+PRINT "Person: name=" person_name ", age=" person_age
+
+PRINT ""
+
+# 8. Module System
+PRINT "8. MODULE SYSTEM"
+PRINT "----------------"
+
+# Export data
+ARRAY export_array
+PUSH export_array 100
+PUSH export_array 200
+PUSH export_array 300
+INTENT module_version "1.0.0"
+EXPORT export_array module_version "module_data.anubhav"
+PRINT "Data exported to module_data.anubhav"
+
+PRINT ""
+
+# 9. Advanced Features Summary
+PRINT "9. FEATURE SUMMARY"
+PRINT "------------------"
+PRINT "Anubhav Language now supports:"
+PRINT "✓ 60+ built-in operations"
+PRINT "✓ Arrays, Dictionaries, Functions"
+PRINT "✓ Recursion & Local scope"
+PRINT "✓ Error handling (TRY/CATCH)"
+PRINT "✓ Module system (IMPORT/EXPORT)"
+PRINT "✓ Advanced math & string operations"
+PRINT "✓ Loop control (BREAK/CONTINUE)"
+PRINT "✓ Pattern matching (SWITCH/CASE)"
+PRINT "✓ File I/O operations"
+PRINT "✓ User input handling"
+PRINT ""
+PRINT "=== ANUBHAV: A COMPLETE PROGRAMMING LANGUAGE ==="

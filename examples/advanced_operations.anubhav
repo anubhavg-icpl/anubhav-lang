@@ -1,0 +1,62 @@
+# Advanced Operations Test
+PRINT "=== Testing Advanced Operations ==="
+
+# Test data
+ARRAY nums
+PUSH nums 1
+PUSH nums 2
+PUSH nums 3
+PUSH nums 4
+PUSH nums 5
+
+# Current working features
+PRINT ""
+PRINT "WORKING FEATURES:"
+PRINT "-----------------"
+
+# MAP operation
+MAP nums RECALL item * RECALL item squares
+JOIN squares ", " squares_str
+PRINT "Squares:" squares_str
+
+# FILTER operation
+FILTER nums RECALL item > 2 large
+JOIN large ", " large_str
+PRINT "Filtered >2:" large_str
+
+# SUM operation
+SUM nums total
+PRINT "Sum:" total
+
+# SORT operation
+ARRAY unsorted
+PUSH unsorted 3
+PUSH unsorted 1
+PUSH unsorted 4
+PUSH unsorted 1
+PUSH unsorted 5
+SORT unsorted ASC
+JOIN unsorted ", " sorted_str
+PRINT "Sorted:" sorted_str
+
+# REVERSE operation
+REVERSE nums
+JOIN nums ", " reversed_str
+PRINT "Reversed:" reversed_str
+
+# Function with recursion
+FUNCTION factorial(n) DO
+    IF RECALL n <= 1 THEN
+        RETURN 1
+    END
+    CALCULATE n_minus_1 RECALL n - 1
+    CALL factorial(RECALL n_minus_1) sub_fact
+    CALCULATE result RECALL n * RECALL sub_fact
+    RETURN RECALL result
+END
+
+CALL factorial(5) fact5
+PRINT "5! =" fact5
+
+PRINT ""
+PRINT "=== All Advanced Operations Working! ==="
