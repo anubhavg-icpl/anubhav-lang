@@ -454,9 +454,26 @@ impl Parser {
     }
 
     fn parse_factor(&mut self) -> Result<Expression, String> {
-        let mut left = self.parse_primary()?;
+        let mut left = self.parse_power()?;
         
         while matches!(self.current_token, Token::Star | Token::Slash | Token::Percent) {
+            let operator = self.current_token.clone();
+            self.advance();
+            let right = self.parse_power()?;
+            left = Expression::BinaryOp {
+                left: Box::new(left),
+                operator,
+                right: Box::new(right),
+            };
+        }
+        
+        Ok(left)
+    }
+
+    fn parse_power(&mut self) -> Result<Expression, String> {
+        let mut left = self.parse_primary()?;
+        
+        while self.current_token == Token::Power {
             let operator = self.current_token.clone();
             self.advance();
             let right = self.parse_primary()?;

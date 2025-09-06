@@ -24,6 +24,7 @@ pub enum Token {
     Star,
     Slash,
     Percent,
+    Power,
     LeftParen,
     RightParen,
     Equal,
@@ -141,7 +142,12 @@ impl Lexer {
             }
             Some('*') => {
                 self.advance();
-                Token::Star
+                if self.current_char == Some('*') {
+                    self.advance();
+                    Token::Power
+                } else {
+                    Token::Star
+                }
             }
             Some('/') => {
                 self.advance();

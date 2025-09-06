@@ -144,6 +144,7 @@ impl Interpreter {
                             Ok(left_val % right_val)
                         }
                     }
+                    Token::Power => Ok(left_val.powf(right_val)),
                     Token::Equal => Ok(if left_val == right_val { 1.0 } else { 0.0 }),
                     Token::NotEqual => Ok(if left_val != right_val { 1.0 } else { 0.0 }),
                     Token::Less => Ok(if left_val < right_val { 1.0 } else { 0.0 }),
