@@ -123,6 +123,18 @@ pub enum Statement {
     Return {
         value: Option<Expression>,
     },
+    ArraySort {
+        array_name: String,
+        ascending: bool,
+    },
+    ArrayFilter {
+        array_name: String,
+        condition: Expression,
+        result_array: String,
+    },
+    ArrayReverse {
+        array_name: String,
+    },
 }
 
 pub struct Parser {
@@ -233,6 +245,15 @@ impl Parser {
                 }
                 Token::Return => {
                     statements.push(self.parse_return()?);
+                }
+                Token::Sort => {
+                    statements.push(self.parse_array_sort()?);
+                }
+                Token::Filter => {
+                    statements.push(self.parse_array_filter()?);
+                }
+                Token::Reverse => {
+                    statements.push(self.parse_array_reverse()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -1361,5 +1382,64 @@ impl Parser {
         };
         
         Ok(Statement::Return { value })
+    }
+
+    fn parse_array_sort(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip SORT
+        
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after SORT"));
+        };
+        self.advance();
+        
+        // Default to ascending, check for DESC keyword
+        let mut ascending = true;
+        if let Token::Identifier(order) = &self.current_token {
+            if order == "DESC" {
+                ascending = false;
+                self.advance();
+            } else if order == "ASC" {
+                self.advance(); // Skip explicit ASC
+            }
+        }
+        
+        Ok(Statement::ArraySort { array_name, ascending })
+    }
+
+    fn parse_array_filter(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip FILTER
+        
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after FILTER"));
+        };
+        self.advance();
+        
+        let condition = self.parse_expression()?;
+        
+        let result_array = if let Token::Identifier(result_name) = &self.current_token {
+            result_name.clone()
+        } else {
+            return Err(format!("Expected result array name for FILTER"));
+        };
+        self.advance();
+        
+        Ok(Statement::ArrayFilter { array_name, condition, result_array })
+    }
+
+    fn parse_array_reverse(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip REVERSE
+        
+        let array_name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected array name after REVERSE"));
+        };
+        self.advance();
+        
+        Ok(Statement::ArrayReverse { array_name })
     }
 }

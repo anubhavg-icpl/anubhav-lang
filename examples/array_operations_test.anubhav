@@ -1,0 +1,62 @@
+# Testing array sorting and filtering operations
+PRINT "Testing array operations"
+
+# Create and populate an array
+ARRAY numbers
+PUSH numbers 5
+PUSH numbers 2
+PUSH numbers 8
+PUSH numbers 1
+PUSH numbers 9
+PUSH numbers 3
+
+PRINT "=== Original array ==="
+GET numbers 0 n0
+GET numbers 1 n1
+GET numbers 2 n2
+GET numbers 3 n3
+GET numbers 4 n4
+GET numbers 5 n5
+PRINT "Array:" n0 n1 n2 n3 n4 n5
+
+# Test sorting ascending
+PRINT "=== Sorting ascending ==="
+SORT numbers ASC
+GET numbers 0 s0
+GET numbers 1 s1
+GET numbers 2 s2
+GET numbers 3 s3
+GET numbers 4 s4
+GET numbers 5 s5
+PRINT "Sorted ASC:" s0 s1 s2 s3 s4 s5
+
+# Test sorting descending
+PRINT "=== Sorting descending ==="
+SORT numbers DESC
+GET numbers 0 d0
+GET numbers 1 d1
+GET numbers 2 d2
+GET numbers 3 d3
+GET numbers 4 d4
+GET numbers 5 d5
+PRINT "Sorted DESC:" d0 d1 d2 d3 d4 d5
+
+# Test reverse
+PRINT "=== Reversing array ==="
+REVERSE numbers
+GET numbers 0 r0
+GET numbers 1 r1
+GET numbers 2 r2
+GET numbers 3 r3
+GET numbers 4 r4
+GET numbers 5 r5
+PRINT "Reversed:" r0 r1 r2 r3 r4 r5
+
+# Test filtering (filter numbers greater than 5)
+PRINT "=== Filtering elements > 5 ==="
+FILTER numbers RECALL item > 5 large_numbers
+GET large_numbers 0 large0
+GET large_numbers 1 large1
+PRINT "Large numbers:" large0 large1
+
+PRINT "Array operations test completed!"

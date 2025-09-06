@@ -386,6 +386,67 @@ impl Interpreter {
                     };
                     return Err(format!("RETURN:{}", return_val)); // Special error code for return
                 }
+                Statement::ArraySort { array_name, ascending } => {
+                    if let Some(array) = self.arrays.get_mut(&array_name) {
+                        if ascending {
+                            array.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                        } else {
+                            array.sort_by(|a, b| b.partial_cmp(a).unwrap());
+                        }
+                        println!("Array '{}' sorted {}", array_name, 
+                            if ascending { "ascending" } else { "descending" });
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::ArrayFilter { array_name, condition, result_array } => {
+                    if let Some(source_array) = self.arrays.get(&array_name).cloned() {
+                        let mut filtered_array = Vec::new();
+                        
+                        for (index, &value) in source_array.iter().enumerate() {
+                            // Set a temporary variable for the current array element
+                            let old_item_value = self.variables.get("item").copied();
+                            let old_index_value = self.variables.get("index").copied();
+                            
+                            self.variables.insert("item".to_string(), value);
+                            self.variables.insert("index".to_string(), index as f64);
+                            
+                            // Evaluate condition
+                            let condition_result = self.evaluate_expression(&condition)?;
+                            
+                            if condition_result != 0.0 {
+                                filtered_array.push(value);
+                            }
+                            
+                            // Restore old values
+                            if let Some(old_val) = old_item_value {
+                                self.variables.insert("item".to_string(), old_val);
+                            } else {
+                                self.variables.remove("item");
+                            }
+                            if let Some(old_val) = old_index_value {
+                                self.variables.insert("index".to_string(), old_val);
+                            } else {
+                                self.variables.remove("index");
+                            }
+                        }
+                        
+                        self.arrays.insert(result_array.clone(), filtered_array);
+                        println!("Filtered {} into {} with {} elements", 
+                            array_name, result_array, 
+                            self.arrays.get(&result_array).unwrap().len());
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
+                Statement::ArrayReverse { array_name } => {
+                    if let Some(array) = self.arrays.get_mut(&array_name) {
+                        array.reverse();
+                        println!("Array '{}' reversed", array_name);
+                    } else {
+                        return Err(format!("Array '{}' not found", array_name));
+                    }
+                }
             }
         }
         Ok(())

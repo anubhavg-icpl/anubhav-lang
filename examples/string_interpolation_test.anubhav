@@ -1,0 +1,38 @@
+# Testing string interpolation with ${} syntax
+PRINT "Testing string interpolation functionality"
+
+# Basic variable interpolation
+STORE name 42
+INTENT greeting "Hello World!"
+CALCULATE pi 3.14159
+
+PRINT "=== Basic interpolation ==="
+PRINT "The answer is ${name}"
+PRINT "Message: ${greeting}"
+PRINT "Pi value: ${pi}"
+
+# Mixed text and variables
+PRINT "=== Mixed interpolation ==="
+PRINT "The value of pi is approximately ${pi} which is close to 3"
+PRINT "Greeting: ${greeting} and the answer is ${name}"
+
+# Multiple variables
+STORE x 10
+STORE y 20
+CALCULATE sum RECALL x + RECALL y
+
+PRINT "=== Multiple variables ==="
+PRINT "x = ${x}, y = ${y}, sum = ${sum}"
+
+# Array interpolation
+ARRAY numbers
+PUSH numbers 1
+PUSH numbers 2
+PUSH numbers 3
+GET numbers 0 first
+GET numbers 1 second
+
+PRINT "=== Array values ==="
+PRINT "First: ${first}, Second: ${second}"
+
+PRINT "String interpolation test completed!"

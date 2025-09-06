@@ -51,6 +51,9 @@ pub enum Token {
     Function,
     Call,
     Return,
+    Sort,
+    Filter,
+    Reverse,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -298,6 +301,9 @@ impl Lexer {
                     "FUNCTION" => Token::Function,
                     "CALL" => Token::Call,
                     "RETURN" => Token::Return,
+                    "SORT" => Token::Sort,
+                    "FILTER" => Token::Filter,
+                    "REVERSE" => Token::Reverse,
                     _ => Token::Identifier(identifier),
                 }
             }
