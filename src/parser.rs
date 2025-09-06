@@ -29,6 +29,10 @@ pub enum Statement {
         name: String,
         value: Expression,
     },
+    Combine {
+        name: String,
+        parts: Vec<String>,
+    },
 }
 
 pub struct Parser {
@@ -65,6 +69,9 @@ impl Parser {
                 }
                 Token::Store => {
                     statements.push(self.parse_store()?);
+                }
+                Token::Combine => {
+                    statements.push(self.parse_combine()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -149,6 +156,40 @@ impl Parser {
         let value = self.parse_expression()?;
         
         Ok(Statement::Store { name, value })
+    }
+
+    fn parse_combine(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip COMBINE
+        
+        let name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected identifier after COMBINE"));
+        };
+        self.advance();
+        
+        let mut parts = Vec::new();
+        
+        // Parse string literals and identifiers
+        while matches!(self.current_token, Token::StringLiteral(_) | Token::Identifier(_)) {
+            match &self.current_token {
+                Token::StringLiteral(s) => {
+                    parts.push(s.clone());
+                    self.advance();
+                }
+                Token::Identifier(id) => {
+                    parts.push(format!("${{{}}}", id));
+                    self.advance();
+                }
+                _ => break,
+            }
+        }
+        
+        if parts.is_empty() {
+            return Err(format!("Expected strings or identifiers after COMBINE name"));
+        }
+        
+        Ok(Statement::Combine { name, parts })
     }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {

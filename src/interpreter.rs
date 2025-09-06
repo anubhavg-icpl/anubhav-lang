@@ -48,6 +48,26 @@ impl Interpreter {
                     let result = self.evaluate_expression(&value)?;
                     self.variables.insert(name, result);
                 }
+                Statement::Combine { name, parts } => {
+                    let mut combined = String::new();
+                    for part in parts {
+                        if part.starts_with("${") && part.ends_with("}") {
+                            let var_name = &part[2..part.len()-1];
+                            if let Some(msg) = self.intents.get(var_name) {
+                                combined.push_str(msg);
+                            } else if let Some(val) = self.calculations.get(var_name) {
+                                combined.push_str(&val.to_string());
+                            } else if let Some(val) = self.variables.get(var_name) {
+                                combined.push_str(&val.to_string());
+                            } else {
+                                combined.push_str(&format!("<{} not found>", var_name));
+                            }
+                        } else {
+                            combined.push_str(&part);
+                        }
+                    }
+                    self.intents.insert(name, combined);
+                }
             }
         }
         Ok(())

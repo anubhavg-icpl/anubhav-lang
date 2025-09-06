@@ -6,6 +6,7 @@ pub enum Token {
     With,
     Store,
     Recall,
+    Combine,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -191,6 +192,7 @@ impl Lexer {
                     "WITH" => Token::With,
                     "STORE" => Token::Store,
                     "RECALL" => Token::Recall,
+                    "COMBINE" => Token::Combine,
                     _ => Token::Identifier(identifier),
                 }
             }

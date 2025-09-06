@@ -1,0 +1,11 @@
+# String concatenation with COMBINE
+INTENT name "Anubhav"
+CALCULATE version 1.0
+
+COMBINE message "Welcome to " name " Language v" version "!"
+MANIFEST message
+
+# Combine multiple values
+STORE count 42
+COMBINE info "The answer is " count " and it's final!"
+MANIFEST info
