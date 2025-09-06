@@ -24,6 +24,8 @@ pub enum Token {
     Min,
     Max,
     Assert,
+    Try,
+    Catch,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -244,6 +246,8 @@ impl Lexer {
                     "MIN" => Token::Min,
                     "MAX" => Token::Max,
                     "ASSERT" => Token::Assert,
+                    "TRY" => Token::Try,
+                    "CATCH" => Token::Catch,
                     _ => Token::Identifier(identifier),
                 }
             }

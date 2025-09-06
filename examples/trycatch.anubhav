@@ -1,0 +1,47 @@
+# TRY/CATCH error handling examples
+PRINT "Testing TRY/CATCH error handling"
+
+# Test 1: Division by zero (will catch error)
+PRINT "Test 1: Division by zero"
+TRY
+    STORE divisor 0
+    CALCULATE result 10 / RECALL divisor
+    PRINT "This shouldn't print"
+CATCH
+    PRINT "Error caught: Division by zero handled gracefully"
+END
+
+# Test 2: Successful operation (no error)
+PRINT "Test 2: Normal operation"
+TRY
+    STORE a 15
+    STORE b 3
+    CALCULATE division RECALL a / RECALL b
+    PRINT "Division result:" division
+CATCH
+    PRINT "This catch block shouldn't execute"
+END
+
+# Test 3: Failed assertion in TRY block
+PRINT "Test 3: Failed assertion"
+TRY
+    STORE x 5
+    ASSERT RECALL x == 10 "x should be 10"
+    PRINT "This won't print"
+CATCH
+    PRINT "Assertion error caught successfully"
+    STORE fixed_x 10
+    PRINT "Fixed value:" fixed_x
+END
+
+# Test 4: Nested TRY/CATCH with variable lookup error
+PRINT "Test 4: Variable lookup error"
+TRY
+    CALCULATE result RECALL nonexistent_var + 5
+CATCH
+    PRINT "Variable not found error handled"
+    STORE default_value 42
+    PRINT "Using default value:" default_value
+END
+
+PRINT "All TRY/CATCH tests completed successfully!"

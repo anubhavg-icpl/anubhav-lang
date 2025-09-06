@@ -158,6 +158,17 @@ impl Interpreter {
                     }
                     println!("✓ Assertion passed");
                 }
+                Statement::TryCatch { try_body, catch_body } => {
+                    match self.execute(try_body.clone()) {
+                        Ok(_) => {
+                            // TRY block succeeded, continue normally
+                        }
+                        Err(_error) => {
+                            // TRY block failed, execute CATCH block
+                            self.execute(catch_body.clone())?;
+                        }
+                    }
+                }
             }
         }
         Ok(())

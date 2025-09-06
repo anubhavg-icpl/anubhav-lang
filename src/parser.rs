@@ -66,6 +66,10 @@ pub enum Statement {
         condition: Expression,
         message: Option<String>,
     },
+    TryCatch {
+        try_body: Vec<Statement>,
+        catch_body: Vec<Statement>,
+    },
 }
 
 pub struct Parser {
@@ -129,6 +133,9 @@ impl Parser {
                 }
                 Token::Assert => {
                     statements.push(self.parse_assert()?);
+                }
+                Token::Try => {
+                    statements.push(self.parse_try_catch()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -512,6 +519,67 @@ impl Parser {
         };
         
         Ok(Statement::Assert { condition, message })
+    }
+    
+    fn parse_try_catch(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip TRY
+        
+        let mut try_body = Vec::new();
+        
+        while self.current_token != Token::Catch {
+            match self.current_token {
+                Token::EOF => return Err(format!("Expected CATCH after TRY")),
+                Token::Intent => try_body.push(self.parse_intent_declaration()?),
+                Token::Manifest => try_body.push(self.parse_manifest_call()?),
+                Token::Calculate => try_body.push(self.parse_calculate()?),
+                Token::Store => try_body.push(self.parse_store()?),
+                Token::Combine => try_body.push(self.parse_combine()?),
+                Token::Repeat => try_body.push(self.parse_repeat()?),
+                Token::If => try_body.push(self.parse_if()?),
+                Token::Print => try_body.push(self.parse_print()?),
+                Token::While => try_body.push(self.parse_while()?),
+                Token::Increment => try_body.push(self.parse_increment()?),
+                Token::Decrement => try_body.push(self.parse_decrement()?),
+                Token::For => try_body.push(self.parse_for()?),
+                Token::Assert => try_body.push(self.parse_assert()?),
+                _ => {
+                    return Err(format!("Unexpected token in TRY body: {:?}", self.current_token));
+                }
+            }
+        }
+        
+        self.advance(); // Skip CATCH
+        
+        let mut catch_body = Vec::new();
+        
+        while self.current_token != Token::End {
+            match self.current_token {
+                Token::EOF => return Err(format!("Expected END after CATCH")),
+                Token::Intent => catch_body.push(self.parse_intent_declaration()?),
+                Token::Manifest => catch_body.push(self.parse_manifest_call()?),
+                Token::Calculate => catch_body.push(self.parse_calculate()?),
+                Token::Store => catch_body.push(self.parse_store()?),
+                Token::Combine => catch_body.push(self.parse_combine()?),
+                Token::Repeat => catch_body.push(self.parse_repeat()?),
+                Token::If => catch_body.push(self.parse_if()?),
+                Token::Print => catch_body.push(self.parse_print()?),
+                Token::While => catch_body.push(self.parse_while()?),
+                Token::Increment => catch_body.push(self.parse_increment()?),
+                Token::Decrement => catch_body.push(self.parse_decrement()?),
+                Token::For => catch_body.push(self.parse_for()?),
+                Token::Assert => catch_body.push(self.parse_assert()?),
+                _ => {
+                    return Err(format!("Unexpected token in CATCH body: {:?}", self.current_token));
+                }
+            }
+        }
+        
+        if self.current_token != Token::End {
+            return Err(format!("Expected END to close TRY/CATCH"));
+        }
+        self.advance(); // Skip END
+        
+        Ok(Statement::TryCatch { try_body, catch_body })
     }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {
