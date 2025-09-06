@@ -33,6 +33,10 @@ MANIFEST sum
 - `STORE name value` - Store a variable
 - `RECALL name` - Use a stored variable in expressions
 - `COMBINE name strings...` - Concatenate strings and variables
+- `REPEAT n TIMES DO...END` - Loop execution
+- `IF condition THEN...ELSE...END` - Conditional execution
+- `PRINT items...` - Formatted output
+- `AND/OR` - Logical operators
 - `#` - Comments (to end of line)
 
 ## Features
@@ -40,9 +44,13 @@ MANIFEST sum
 - Intention-based programming paradigm
 - Arithmetic operations (+, -, *, /)
 - Comparison operators (==, !=, <, >, <=, >=)
+- Logical operators (AND, OR)
 - Variables and calculations
 - String concatenation
-- Comments
+- Comments (#)
+- Loops (REPEAT)
+- Conditionals (IF/THEN/ELSE)
+- Formatted output (PRINT)
 
 ## Run Examples
 
