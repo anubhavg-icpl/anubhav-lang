@@ -171,6 +171,22 @@ impl Interpreter {
                         }
                     }
                 }
+                Statement::StringTransform { name, operation, source } => {
+                    let source_string = if let Some(intent_str) = self.intents.get(&source) {
+                        intent_str.clone()
+                    } else {
+                        // If not found as intent, treat as literal string
+                        source.clone()
+                    };
+                    
+                    let result = match operation.as_str() {
+                        "UPPERCASE" => source_string.to_uppercase(),
+                        "LOWERCASE" => source_string.to_lowercase(),
+                        _ => return Err(format!("Unknown string operation: {}", operation)),
+                    };
+                    
+                    self.intents.insert(name.clone(), result);
+                }
             }
         }
         Ok(())
@@ -233,6 +249,18 @@ impl Interpreter {
                     Token::Ceil => Ok(right_val.ceil()),
                     Token::Round => Ok(right_val.round()),
                     Token::Random => Ok(self.next_random()),
+                    Token::Length => {
+                        // LENGTH function - get string from intents
+                        if let Expression::Recall(name) = &**left {
+                            if let Some(string_val) = self.intents.get(name) {
+                                Ok(string_val.len() as f64)
+                            } else {
+                                Err(format!("String '{}' not found for LENGTH", name))
+                            }
+                        } else {
+                            Err("LENGTH function error".to_string())
+                        }
+                    }
                     _ => Err(format!("Invalid operator: {:?}", operator))
                 }
             }

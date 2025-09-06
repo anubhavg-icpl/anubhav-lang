@@ -70,6 +70,11 @@ pub enum Statement {
         try_body: Vec<Statement>,
         catch_body: Vec<Statement>,
     },
+    StringTransform {
+        name: String,
+        operation: String,
+        source: String,
+    },
 }
 
 pub struct Parser {
@@ -136,6 +141,9 @@ impl Parser {
                 }
                 Token::Try => {
                     statements.push(self.parse_try_catch()?);
+                }
+                Token::Uppercase | Token::Lowercase => {
+                    statements.push(self.parse_string_transform()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -581,6 +589,40 @@ impl Parser {
         
         Ok(Statement::TryCatch { try_body, catch_body })
     }
+    
+    fn parse_string_transform(&mut self) -> Result<Statement, String> {
+        let operation = match self.current_token {
+            Token::Uppercase => "UPPERCASE".to_string(),
+            Token::Lowercase => "LOWERCASE".to_string(),
+            _ => return Err("Invalid string operation".to_string()),
+        };
+        self.advance(); // Skip operation token
+        
+        let name = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected identifier after {}", operation));
+        };
+        self.advance();
+        
+        let source = match &self.current_token {
+            Token::StringLiteral(s) => {
+                let result = s.clone();
+                self.advance();
+                result
+            }
+            Token::Identifier(src) => {
+                let result = src.clone();
+                self.advance();
+                result
+            }
+            _ => {
+                return Err(format!("Expected string literal or identifier after {}", operation));
+            }
+        };
+        
+        Ok(Statement::StringTransform { name, operation, source })
+    }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {
         self.parse_logical_or()
@@ -709,7 +751,7 @@ impl Parser {
                 self.advance();
                 Ok(Expression::Number(num))
             }
-            Token::Min | Token::Max | Token::Floor | Token::Ceil | Token::Round | Token::Random => {
+            Token::Min | Token::Max | Token::Floor | Token::Ceil | Token::Round | Token::Random | Token::Length => {
                 let op = self.current_token.clone();
                 self.advance();
                 
@@ -762,6 +804,37 @@ impl Parser {
                             operator: op,
                             right: Box::new(Expression::Number(0.0)), // Dummy right operand
                         })
+                    }
+                    Token::Length => {
+                        // String function - takes string literal or identifier
+                        if let Token::StringLiteral(s) = &self.current_token {
+                            let str_len = s.len() as f64;
+                            self.advance();
+                            
+                            if self.current_token != Token::RightParen {
+                                return Err(format!("Expected ) after LENGTH argument"));
+                            }
+                            self.advance();
+                            
+                            Ok(Expression::Number(str_len))
+                        } else if let Token::Identifier(name) = &self.current_token {
+                            let var_name = name.clone();
+                            self.advance();
+                            
+                            if self.current_token != Token::RightParen {
+                                return Err(format!("Expected ) after LENGTH argument"));
+                            }
+                            self.advance();
+                            
+                            // Store the identifier to be resolved at runtime
+                            Ok(Expression::BinaryOp {
+                                left: Box::new(Expression::Recall(var_name)),
+                                operator: op,
+                                right: Box::new(Expression::Number(0.0)), // Dummy
+                            })
+                        } else {
+                            return Err(format!("LENGTH expects string literal or identifier"));
+                        }
                     }
                     _ => unreachable!()
                 }

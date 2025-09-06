@@ -30,6 +30,11 @@ pub enum Token {
     Ceil,
     Round,
     Random,
+    Length,
+    Substring,
+    Uppercase,
+    Lowercase,
+    Contains,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -256,6 +261,11 @@ impl Lexer {
                     "CEIL" => Token::Ceil,
                     "ROUND" => Token::Round,
                     "RANDOM" => Token::Random,
+                    "LENGTH" => Token::Length,
+                    "SUBSTRING" => Token::Substring,
+                    "UPPERCASE" => Token::Uppercase,
+                    "LOWERCASE" => Token::Lowercase,
+                    "CONTAINS" => Token::Contains,
                     _ => Token::Identifier(identifier),
                 }
             }

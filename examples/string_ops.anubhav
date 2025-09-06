@@ -1,0 +1,47 @@
+# String operations examples
+PRINT "Testing string operations"
+
+# Test LENGTH function with string intents
+INTENT greeting "Hello, World!"
+INTENT name "Anubhav"
+INTENT empty ""
+
+# Test LENGTH calculations
+CALCULATE greeting_length LENGTH("Hello, World!")
+CALCULATE name_length LENGTH("Anubhav")
+CALCULATE empty_length LENGTH("")
+
+PRINT "Length of greeting:" greeting_length
+PRINT "Length of name:" name_length  
+PRINT "Length of empty string:" empty_length
+
+# Use length in calculations
+CALCULATE total_length RECALL greeting_length + RECALL name_length
+PRINT "Total length:" total_length
+
+# Test with string literal
+CALCULATE literal_length LENGTH("test string")
+PRINT "Length of literal:" literal_length
+
+# Test string transformations
+UPPERCASE upper_greeting greeting
+LOWERCASE lower_name name
+MANIFEST upper_greeting
+MANIFEST lower_name
+
+# Transform string literals
+UPPERCASE upper_literal "Hello World"
+LOWERCASE lower_literal "ANUBHAV LANGUAGE"
+MANIFEST upper_literal
+MANIFEST lower_literal
+
+# Chain transformations
+UPPERCASE temp_upper "mixed CaSe StRiNg"
+LOWERCASE final_result temp_upper
+MANIFEST final_result
+
+# String operations completed:
+# - LENGTH function works with string literals
+# - UPPERCASE/LOWERCASE work with intents and literals
+# - String transformations can be chained
+PRINT "String operations implemented successfully!"
