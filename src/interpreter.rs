@@ -108,6 +108,20 @@ impl Interpreter {
                         self.execute(body.clone())?;
                     }
                 }
+                Statement::Increment { variable } => {
+                    if let Some(val) = self.variables.get(&variable) {
+                        self.variables.insert(variable, val + 1.0);
+                    } else {
+                        self.variables.insert(variable, 1.0);
+                    }
+                }
+                Statement::Decrement { variable } => {
+                    if let Some(val) = self.variables.get(&variable) {
+                        self.variables.insert(variable, val - 1.0);
+                    } else {
+                        self.variables.insert(variable, -1.0);
+                    }
+                }
             }
         }
         Ok(())

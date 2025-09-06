@@ -49,6 +49,12 @@ pub enum Statement {
         condition: Expression,
         body: Vec<Statement>,
     },
+    Increment {
+        variable: String,
+    },
+    Decrement {
+        variable: String,
+    },
 }
 
 pub struct Parser {
@@ -100,6 +106,12 @@ impl Parser {
                 }
                 Token::While => {
                     statements.push(self.parse_while()?);
+                }
+                Token::Increment => {
+                    statements.push(self.parse_increment()?);
+                }
+                Token::Decrement => {
+                    statements.push(self.parse_decrement()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -364,6 +376,8 @@ impl Parser {
                 Token::Combine => body.push(self.parse_combine()?),
                 Token::Print => body.push(self.parse_print()?),
                 Token::If => body.push(self.parse_if()?),
+                Token::Increment => body.push(self.parse_increment()?),
+                Token::Decrement => body.push(self.parse_decrement()?),
                 _ => {
                     return Err(format!("Unexpected token in WHILE body: {:?}", self.current_token));
                 }
@@ -376,6 +390,32 @@ impl Parser {
         self.advance(); // Skip END
         
         Ok(Statement::While { condition, body })
+    }
+
+    fn parse_increment(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip INCREMENT
+        
+        let variable = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected variable name after INCREMENT"));
+        };
+        self.advance();
+        
+        Ok(Statement::Increment { variable })
+    }
+
+    fn parse_decrement(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip DECREMENT
+        
+        let variable = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected variable name after DECREMENT"));
+        };
+        self.advance();
+        
+        Ok(Statement::Decrement { variable })
     }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {

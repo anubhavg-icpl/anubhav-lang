@@ -16,6 +16,8 @@ pub enum Token {
     Else,
     Print,
     While,
+    Increment,
+    Decrement,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -228,6 +230,8 @@ impl Lexer {
                     "NOT" => Token::Not,
                     "PRINT" => Token::Print,
                     "WHILE" => Token::While,
+                    "INCREMENT" => Token::Increment,
+                    "DECREMENT" => Token::Decrement,
                     _ => Token::Identifier(identifier),
                 }
             }

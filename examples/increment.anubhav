@@ -1,0 +1,30 @@
+# INCREMENT and DECREMENT examples
+STORE counter 0
+
+PRINT "Initial counter:" counter
+
+INCREMENT counter
+PRINT "After increment:" counter
+
+INCREMENT counter
+INCREMENT counter
+PRINT "After 2 more increments:" counter
+
+DECREMENT counter
+PRINT "After decrement:" counter
+
+# Loop with increment
+STORE i 0
+WHILE RECALL i < 5 DO
+    PRINT "Loop iteration:" i
+    INCREMENT i
+END
+
+# Countdown with decrement
+PRINT "Countdown:"
+STORE countdown 5
+WHILE RECALL countdown > 0 DO
+    PRINT countdown
+    DECREMENT countdown
+END
+PRINT "Liftoff!"
