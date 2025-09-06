@@ -1,0 +1,5 @@
+INTENT greeting "Hello"
+MANIFEST greeting WITH "World!"
+
+CALCULATE result 42
+MANIFEST result WITH "is the answer"

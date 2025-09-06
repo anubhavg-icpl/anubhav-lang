@@ -18,6 +18,7 @@ pub enum Statement {
     },
     ManifestCall {
         intent_name: String,
+        with_message: Option<String>,
     },
     Calculate {
         name: String,
@@ -96,7 +97,20 @@ impl Parser {
         };
         self.advance();
         
-        Ok(Statement::ManifestCall { intent_name })
+        let with_message = if self.current_token == Token::With {
+            self.advance(); // Skip WITH
+            if let Token::StringLiteral(msg) = &self.current_token {
+                let message = msg.clone();
+                self.advance();
+                Some(message)
+            } else {
+                return Err(format!("Expected string after WITH"));
+            }
+        } else {
+            None
+        };
+        
+        Ok(Statement::ManifestCall { intent_name, with_message })
     }
 
     fn parse_calculate(&mut self) -> Result<Statement, String> {

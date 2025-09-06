@@ -21,11 +21,19 @@ impl Interpreter {
                 Statement::IntentDeclaration { name, message } => {
                     self.intents.insert(name, message);
                 }
-                Statement::ManifestCall { intent_name } => {
+                Statement::ManifestCall { intent_name, with_message } => {
                     if let Some(message) = self.intents.get(&intent_name) {
-                        println!("{}", message);
+                        if let Some(context) = with_message {
+                            println!("{} {}", message, context);
+                        } else {
+                            println!("{}", message);
+                        }
                     } else if let Some(result) = self.calculations.get(&intent_name) {
-                        println!("{}", result);
+                        if let Some(context) = with_message {
+                            println!("{} {}", result, context);
+                        } else {
+                            println!("{}", result);
+                        }
                     } else {
                         return Err(format!("Intent '{}' not found", intent_name));
                     }

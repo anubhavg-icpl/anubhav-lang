@@ -3,6 +3,7 @@ pub enum Token {
     Intent,
     Manifest,
     Calculate,
+    With,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -134,6 +135,7 @@ impl Lexer {
                     "INTENT" => Token::Intent,
                     "MANIFEST" => Token::Manifest,
                     "CALCULATE" => Token::Calculate,
+                    "WITH" => Token::With,
                     _ => Token::Identifier(identifier),
                 }
             }
