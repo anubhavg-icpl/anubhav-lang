@@ -19,12 +19,16 @@ A unique intention-based programming language where you declare what you intend 
 ```anubhav
 INTENT greeting "Hello, World!"
 MANIFEST greeting
+
+CALCULATE sum 10 + 20
+MANIFEST sum
 ```
 
 ## Syntax
 
 - `INTENT name "message"` - Declare an intention
 - `MANIFEST name` - Execute the intention
+- `CALCULATE name expression` - Perform arithmetic calculations
 
 ## Run Examples
 
