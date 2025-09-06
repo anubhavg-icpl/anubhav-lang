@@ -122,6 +122,30 @@ impl Interpreter {
                         self.variables.insert(variable, -1.0);
                     }
                 }
+                Statement::For { variable, start, end, step, body } => {
+                    let start_val = self.evaluate_expression(&start)?;
+                    let end_val = self.evaluate_expression(&end)?;
+                    let step_val = if let Some(s) = step {
+                        self.evaluate_expression(&s)?
+                    } else {
+                        1.0
+                    };
+                    
+                    let mut current = start_val;
+                    if step_val > 0.0 {
+                        while current <= end_val {
+                            self.variables.insert(variable.clone(), current);
+                            self.execute(body.clone())?;
+                            current += step_val;
+                        }
+                    } else if step_val < 0.0 {
+                        while current >= end_val {
+                            self.variables.insert(variable.clone(), current);
+                            self.execute(body.clone())?;
+                            current += step_val;
+                        }
+                    }
+                }
             }
         }
         Ok(())

@@ -55,6 +55,13 @@ pub enum Statement {
     Decrement {
         variable: String,
     },
+    For {
+        variable: String,
+        start: Expression,
+        end: Expression,
+        step: Option<Expression>,
+        body: Vec<Statement>,
+    },
 }
 
 pub struct Parser {
@@ -112,6 +119,9 @@ impl Parser {
                 }
                 Token::Decrement => {
                     statements.push(self.parse_decrement()?);
+                }
+                Token::For => {
+                    statements.push(self.parse_for()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -418,6 +428,65 @@ impl Parser {
         Ok(Statement::Decrement { variable })
     }
 
+    fn parse_for(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip FOR
+        
+        let variable = if let Token::Identifier(name) = &self.current_token {
+            name.clone()
+        } else {
+            return Err(format!("Expected variable name after FOR"));
+        };
+        self.advance();
+        
+        let start = self.parse_expression()?;
+        
+        if self.current_token != Token::To {
+            return Err(format!("Expected TO after FOR start value"));
+        }
+        self.advance(); // Skip TO
+        
+        let end = self.parse_expression()?;
+        
+        let step = if self.current_token == Token::Step {
+            self.advance(); // Skip STEP
+            Some(self.parse_expression()?)
+        } else {
+            None
+        };
+        
+        if self.current_token != Token::Do {
+            return Err(format!("Expected DO after FOR parameters"));
+        }
+        self.advance(); // Skip DO
+        
+        let mut body = Vec::new();
+        
+        while self.current_token != Token::End && self.current_token != Token::EOF {
+            match self.current_token {
+                Token::Intent => body.push(self.parse_intent_declaration()?),
+                Token::Manifest => body.push(self.parse_manifest_call()?),
+                Token::Calculate => body.push(self.parse_calculate()?),
+                Token::Store => body.push(self.parse_store()?),
+                Token::Combine => body.push(self.parse_combine()?),
+                Token::Print => body.push(self.parse_print()?),
+                Token::If => body.push(self.parse_if()?),
+                Token::Increment => body.push(self.parse_increment()?),
+                Token::Decrement => body.push(self.parse_decrement()?),
+                Token::For => body.push(self.parse_for()?),
+                _ => {
+                    return Err(format!("Unexpected token in FOR body: {:?}", self.current_token));
+                }
+            }
+        }
+        
+        if self.current_token != Token::End {
+            return Err(format!("Expected END to close FOR"));
+        }
+        self.advance(); // Skip END
+        
+        Ok(Statement::For { variable, start, end, step, body })
+    }
+
     fn parse_expression(&mut self) -> Result<Expression, String> {
         self.parse_logical_or()
     }
@@ -554,6 +623,15 @@ impl Parser {
                 } else {
                     Err(format!("Expected identifier after RECALL"))
                 }
+            }
+            Token::Minus => {
+                self.advance(); // Skip minus
+                let expr = self.parse_primary()?;
+                Ok(Expression::BinaryOp {
+                    left: Box::new(Expression::Number(0.0)),
+                    operator: Token::Minus,
+                    right: Box::new(expr),
+                })
             }
             Token::LeftParen => {
                 self.advance(); // Skip (

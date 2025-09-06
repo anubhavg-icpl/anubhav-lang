@@ -18,6 +18,9 @@ pub enum Token {
     While,
     Increment,
     Decrement,
+    For,
+    To,
+    Step,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -232,6 +235,9 @@ impl Lexer {
                     "WHILE" => Token::While,
                     "INCREMENT" => Token::Increment,
                     "DECREMENT" => Token::Decrement,
+                    "FOR" => Token::For,
+                    "TO" => Token::To,
+                    "STEP" => Token::Step,
                     _ => Token::Identifier(identifier),
                 }
             }
