@@ -74,6 +74,14 @@ impl Interpreter {
                         self.execute(body.clone())?;
                     }
                 }
+                Statement::If { condition, then_body, else_body } => {
+                    let cond_value = self.evaluate_expression(&condition)?;
+                    if cond_value != 0.0 {
+                        self.execute(then_body)?;
+                    } else if let Some(else_stmts) = else_body {
+                        self.execute(else_stmts)?;
+                    }
+                }
             }
         }
         Ok(())

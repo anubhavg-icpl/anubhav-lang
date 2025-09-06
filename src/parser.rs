@@ -37,6 +37,11 @@ pub enum Statement {
         count: Expression,
         body: Vec<Statement>,
     },
+    If {
+        condition: Expression,
+        then_body: Vec<Statement>,
+        else_body: Option<Vec<Statement>>,
+    },
 }
 
 pub struct Parser {
@@ -79,6 +84,9 @@ impl Parser {
                 }
                 Token::Repeat => {
                     statements.push(self.parse_repeat()?);
+                }
+                Token::If => {
+                    statements.push(self.parse_if()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -235,6 +243,61 @@ impl Parser {
         self.advance(); // Skip END
         
         Ok(Statement::Repeat { count, body })
+    }
+
+    fn parse_if(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip IF
+        
+        let condition = self.parse_expression()?;
+        
+        if self.current_token != Token::Then {
+            return Err(format!("Expected THEN after IF condition"));
+        }
+        self.advance(); // Skip THEN
+        
+        let mut then_body = Vec::new();
+        
+        while self.current_token != Token::Else && self.current_token != Token::End && self.current_token != Token::EOF {
+            match self.current_token {
+                Token::Intent => then_body.push(self.parse_intent_declaration()?),
+                Token::Manifest => then_body.push(self.parse_manifest_call()?),
+                Token::Calculate => then_body.push(self.parse_calculate()?),
+                Token::Store => then_body.push(self.parse_store()?),
+                Token::Combine => then_body.push(self.parse_combine()?),
+                _ => {
+                    return Err(format!("Unexpected token in IF body: {:?}", self.current_token));
+                }
+            }
+        }
+        
+        let else_body = if self.current_token == Token::Else {
+            self.advance(); // Skip ELSE
+            let mut else_stmts = Vec::new();
+            
+            while self.current_token != Token::End && self.current_token != Token::EOF {
+                match self.current_token {
+                    Token::Intent => else_stmts.push(self.parse_intent_declaration()?),
+                    Token::Manifest => else_stmts.push(self.parse_manifest_call()?),
+                    Token::Calculate => else_stmts.push(self.parse_calculate()?),
+                    Token::Store => else_stmts.push(self.parse_store()?),
+                    Token::Combine => else_stmts.push(self.parse_combine()?),
+                    Token::If => else_stmts.push(self.parse_if()?),
+                    _ => {
+                        return Err(format!("Unexpected token in ELSE body: {:?}", self.current_token));
+                    }
+                }
+            }
+            Some(else_stmts)
+        } else {
+            None
+        };
+        
+        if self.current_token != Token::End {
+            return Err(format!("Expected END to close IF"));
+        }
+        self.advance(); // Skip END
+        
+        Ok(Statement::If { condition, then_body, else_body })
     }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {

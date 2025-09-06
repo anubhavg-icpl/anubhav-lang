@@ -1,0 +1,26 @@
+# IF/THEN conditional
+STORE age 18
+
+IF RECALL age >= 18 THEN
+    INTENT allowed "You can vote!"
+    MANIFEST allowed
+ELSE
+    INTENT denied "Too young to vote"
+    MANIFEST denied
+END
+
+# Multiple conditions
+STORE score 85
+
+IF RECALL score > 90 THEN
+    INTENT grade "Grade: A"
+    MANIFEST grade
+ELSE
+    IF RECALL score > 70 THEN
+        INTENT grade "Grade: B"
+        MANIFEST grade
+    ELSE
+        INTENT grade "Grade: C"
+        MANIFEST grade
+    END
+END

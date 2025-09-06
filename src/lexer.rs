@@ -11,6 +11,9 @@ pub enum Token {
     Times,
     Do,
     End,
+    If,
+    Then,
+    Else,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -201,6 +204,9 @@ impl Lexer {
                     "TIMES" => Token::Times,
                     "DO" => Token::Do,
                     "END" => Token::End,
+                    "IF" => Token::If,
+                    "THEN" => Token::Then,
+                    "ELSE" => Token::Else,
                     _ => Token::Identifier(identifier),
                 }
             }
