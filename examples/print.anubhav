@@ -1,0 +1,26 @@
+# PRINT for formatted output
+PRINT "Welcome to Anubhav Language!"
+
+# Print variables
+INTENT name "Alice"
+STORE age 25
+PRINT "User:" name "Age:" age
+
+# Print calculations
+CALCULATE result 100 / 4
+PRINT "The result is" result
+
+# Print in loops
+STORE counter 1
+REPEAT 3 TIMES DO
+    PRINT "Loop iteration" counter
+    STORE counter RECALL counter + 1
+END
+
+# Conditional printing
+STORE score 95
+IF RECALL score > 90 THEN
+    PRINT "Excellent score:" score
+ELSE
+    PRINT "Score:" score
+END

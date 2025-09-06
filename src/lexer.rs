@@ -14,6 +14,7 @@ pub enum Token {
     If,
     Then,
     Else,
+    Print,
     Identifier(String),
     StringLiteral(String),
     Number(f64),
@@ -211,6 +212,7 @@ impl Lexer {
                     "ELSE" => Token::Else,
                     "AND" => Token::And,
                     "OR" => Token::Or,
+                    "PRINT" => Token::Print,
                     _ => Token::Identifier(identifier),
                 }
             }

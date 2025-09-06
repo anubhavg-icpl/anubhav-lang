@@ -42,6 +42,9 @@ pub enum Statement {
         then_body: Vec<Statement>,
         else_body: Option<Vec<Statement>>,
     },
+    Print {
+        items: Vec<String>,
+    },
 }
 
 pub struct Parser {
@@ -87,6 +90,9 @@ impl Parser {
                 }
                 Token::If => {
                     statements.push(self.parse_if()?);
+                }
+                Token::Print => {
+                    statements.push(self.parse_print()?);
                 }
                 _ => {
                     return Err(format!("Unexpected token: {:?}", self.current_token));
@@ -231,6 +237,7 @@ impl Parser {
                 Token::Calculate => body.push(self.parse_calculate()?),
                 Token::Store => body.push(self.parse_store()?),
                 Token::Combine => body.push(self.parse_combine()?),
+                Token::Print => body.push(self.parse_print()?),
                 _ => {
                     return Err(format!("Unexpected token in repeat body: {:?}", self.current_token));
                 }
@@ -264,6 +271,7 @@ impl Parser {
                 Token::Calculate => then_body.push(self.parse_calculate()?),
                 Token::Store => then_body.push(self.parse_store()?),
                 Token::Combine => then_body.push(self.parse_combine()?),
+                Token::Print => then_body.push(self.parse_print()?),
                 _ => {
                     return Err(format!("Unexpected token in IF body: {:?}", self.current_token));
                 }
@@ -282,6 +290,7 @@ impl Parser {
                     Token::Store => else_stmts.push(self.parse_store()?),
                     Token::Combine => else_stmts.push(self.parse_combine()?),
                     Token::If => else_stmts.push(self.parse_if()?),
+                    Token::Print => else_stmts.push(self.parse_print()?),
                     _ => {
                         return Err(format!("Unexpected token in ELSE body: {:?}", self.current_token));
                     }
@@ -298,6 +307,33 @@ impl Parser {
         self.advance(); // Skip END
         
         Ok(Statement::If { condition, then_body, else_body })
+    }
+
+    fn parse_print(&mut self) -> Result<Statement, String> {
+        self.advance(); // Skip PRINT
+        
+        let mut items = Vec::new();
+        
+        // Parse strings and identifiers for printing
+        while matches!(self.current_token, Token::StringLiteral(_) | Token::Identifier(_)) {
+            match &self.current_token {
+                Token::StringLiteral(s) => {
+                    items.push(s.clone());
+                    self.advance();
+                }
+                Token::Identifier(id) => {
+                    items.push(format!("${{{}}}", id));
+                    self.advance();
+                }
+                _ => break,
+            }
+        }
+        
+        if items.is_empty() {
+            return Err(format!("Expected items after PRINT"));
+        }
+        
+        Ok(Statement::Print { items })
     }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {

@@ -82,6 +82,27 @@ impl Interpreter {
                         self.execute(else_stmts)?;
                     }
                 }
+                Statement::Print { items } => {
+                    let mut output = String::new();
+                    for item in items {
+                        if item.starts_with("${") && item.ends_with("}") {
+                            let var_name = &item[2..item.len()-1];
+                            if let Some(msg) = self.intents.get(var_name) {
+                                output.push_str(msg);
+                            } else if let Some(val) = self.calculations.get(var_name) {
+                                output.push_str(&val.to_string());
+                            } else if let Some(val) = self.variables.get(var_name) {
+                                output.push_str(&val.to_string());
+                            } else {
+                                output.push_str(&format!("<{} not found>", var_name));
+                            }
+                        } else {
+                            output.push_str(&item);
+                        }
+                        output.push(' ');
+                    }
+                    println!("{}", output.trim());
+                }
             }
         }
         Ok(())
