@@ -1,0 +1,21 @@
+# WHILE loop example
+STORE counter 5
+
+WHILE RECALL counter > 0 DO
+    PRINT "Counter:" counter
+    STORE counter RECALL counter - 1
+END
+
+PRINT "Loop finished!"
+
+# Factorial calculation with while
+STORE n 5
+STORE factorial 1
+STORE i 1
+
+WHILE RECALL i <= RECALL n DO
+    STORE factorial RECALL factorial * RECALL i
+    STORE i RECALL i + 1
+END
+
+PRINT "Factorial of" n "is" factorial

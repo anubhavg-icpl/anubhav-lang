@@ -103,6 +103,11 @@ impl Interpreter {
                     }
                     println!("{}", output.trim());
                 }
+                Statement::While { condition, body } => {
+                    while self.evaluate_expression(&condition)? != 0.0 {
+                        self.execute(body.clone())?;
+                    }
+                }
             }
         }
         Ok(())
