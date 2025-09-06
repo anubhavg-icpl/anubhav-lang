@@ -301,7 +301,41 @@ impl Parser {
     }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {
-        self.parse_term()
+        self.parse_logical_or()
+    }
+
+    fn parse_logical_or(&mut self) -> Result<Expression, String> {
+        let mut left = self.parse_logical_and()?;
+        
+        while self.current_token == Token::Or {
+            let operator = self.current_token.clone();
+            self.advance();
+            let right = self.parse_logical_and()?;
+            left = Expression::BinaryOp {
+                left: Box::new(left),
+                operator,
+                right: Box::new(right),
+            };
+        }
+        
+        Ok(left)
+    }
+
+    fn parse_logical_and(&mut self) -> Result<Expression, String> {
+        let mut left = self.parse_term()?;
+        
+        while self.current_token == Token::And {
+            let operator = self.current_token.clone();
+            self.advance();
+            let right = self.parse_term()?;
+            left = Expression::BinaryOp {
+                left: Box::new(left),
+                operator,
+                right: Box::new(right),
+            };
+        }
+        
+        Ok(left)
     }
 
     fn parse_term(&mut self) -> Result<Expression, String> {

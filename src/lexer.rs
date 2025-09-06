@@ -29,6 +29,8 @@ pub enum Token {
     Greater,
     LessEqual,
     GreaterEqual,
+    And,
+    Or,
     EOF,
 }
 
@@ -207,6 +209,8 @@ impl Lexer {
                     "IF" => Token::If,
                     "THEN" => Token::Then,
                     "ELSE" => Token::Else,
+                    "AND" => Token::And,
+                    "OR" => Token::Or,
                     _ => Token::Identifier(identifier),
                 }
             }

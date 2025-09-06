@@ -1,0 +1,28 @@
+# Logical AND/OR operators
+STORE age 25
+STORE citizen 1
+
+# Check voting eligibility
+IF RECALL age >= 18 AND RECALL citizen == 1 THEN
+    INTENT eligible "Eligible to vote!"
+    MANIFEST eligible
+END
+
+# Complex logical expression
+STORE score 75
+STORE bonus 1
+
+IF RECALL score >= 80 OR RECALL bonus == 1 THEN
+    INTENT pass "You pass!"
+    MANIFEST pass
+END
+
+# Combined conditions
+STORE x 10
+STORE y 20
+STORE z 15
+
+IF (RECALL x < RECALL y) AND (RECALL y > RECALL z) THEN
+    INTENT result "Complex condition is true"
+    MANIFEST result
+END
