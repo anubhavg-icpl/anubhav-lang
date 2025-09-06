@@ -18,6 +18,12 @@ pub struct Interpreter {
     pub(crate) random_seed: u64,
 }
 
+impl Default for Interpreter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Interpreter {
     pub fn new() -> Self {
         Interpreter {
@@ -44,18 +50,18 @@ impl Interpreter {
                 } => {
                     if let Some(message) = self.intents.get(&intent_name) {
                         if let Some(context) = with_message {
-                            println!("{} {}", message, context);
+                            println!("{message} {context}");
                         } else {
-                            println!("{}", message);
+                            println!("{message}");
                         }
                     } else if let Some(result) = self.calculations.get(&intent_name) {
                         if let Some(context) = with_message {
-                            println!("{} {}", result, context);
+                            println!("{result} {context}");
                         } else {
-                            println!("{}", result);
+                            println!("{result}");
                         }
                     } else {
-                        return Err(format!("Intent '{}' not found", intent_name));
+                        return Err(format!("Intent '{intent_name}' not found"));
                     }
                 }
                 Statement::Calculate { name, expression } => {
@@ -78,7 +84,7 @@ impl Interpreter {
                             } else if let Some(val) = self.variables.get(var_name) {
                                 combined.push_str(&val.to_string());
                             } else {
-                                combined.push_str(&format!("<{} not found>", var_name));
+                                combined.push_str(&format!("<{var_name} not found>"));
                             }
                         } else {
                             combined.push_str(&part);
@@ -121,7 +127,7 @@ impl Interpreter {
                             } else if let Some(val) = self.variables.get(var_name) {
                                 output.push_str(&val.to_string());
                             } else {
-                                output.push_str(&format!("<{} not found>", var_name));
+                                output.push_str(&format!("<{var_name} not found>"));
                             }
                         } else {
                             output.push_str(&item);
@@ -198,7 +204,7 @@ impl Interpreter {
                     let result = self.evaluate_expression(&condition)?;
                     if result == 0.0 {
                         let error_msg = if let Some(msg) = message {
-                            format!("Assertion failed: {}", msg)
+                            format!("Assertion failed: {msg}")
                         } else {
                             "Assertion failed".to_string()
                         };
@@ -235,7 +241,7 @@ impl Interpreter {
                     let result = match operation.as_str() {
                         "UPPERCASE" => source_string.to_uppercase(),
                         "LOWERCASE" => source_string.to_lowercase(),
-                        _ => return Err(format!("Unknown string operation: {}", operation)),
+                        _ => return Err(format!("Unknown string operation: {operation}")),
                     };
 
                     self.intents.insert(name.clone(), result);
@@ -272,7 +278,7 @@ impl Interpreter {
                     if let Some(array) = self.arrays.get_mut(&array_name) {
                         array.push(val);
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::ArrayPop {
@@ -283,10 +289,10 @@ impl Interpreter {
                         if let Some(val) = array.pop() {
                             self.variables.insert(result_name.clone(), val);
                         } else {
-                            return Err(format!("Array '{}' is empty", array_name));
+                            return Err(format!("Array '{array_name}' is empty"));
                         }
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::ArraySize {
@@ -297,7 +303,7 @@ impl Interpreter {
                         self.variables
                             .insert(result_name.clone(), array.len() as f64);
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::ArrayGet {
@@ -311,12 +317,11 @@ impl Interpreter {
                             self.variables.insert(result_name.clone(), array[idx]);
                         } else {
                             return Err(format!(
-                                "Array index {} out of bounds for array '{}'",
-                                idx, array_name
+                                "Array index {idx} out of bounds for array '{array_name}'"
                             ));
                         }
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::ArraySet {
@@ -331,24 +336,23 @@ impl Interpreter {
                             array[idx] = val;
                         } else {
                             return Err(format!(
-                                "Array index {} out of bounds for array '{}'",
-                                idx, array_name
+                                "Array index {idx} out of bounds for array '{array_name}'"
                             ));
                         }
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::Import { filename } => {
                     // Read and execute the imported file
                     let content = fs::read_to_string(&filename)
-                        .map_err(|e| format!("Failed to read file '{}': {}", filename, e))?;
+                        .map_err(|e| format!("Failed to read file '{filename}': {e}"))?;
 
                     let lexer = Lexer::new(content);
                     let mut parser = Parser::new(lexer);
                     let imported_statements = parser
                         .parse()
-                        .map_err(|e| format!("Parse error in '{}': {}", filename, e))?;
+                        .map_err(|e| format!("Parse error in '{filename}': {e}"))?;
 
                     // Execute the imported statements
                     self.execute(imported_statements)?;
@@ -361,22 +365,22 @@ impl Interpreter {
                     for item in &items {
                         if let Some(intent_value) = self.intents.get(item) {
                             export_content
-                                .push_str(&format!("INTENT {} \"{}\"\n", item, intent_value));
+                                .push_str(&format!("INTENT {item} \"{intent_value}\"\n"));
                         } else if let Some(calc_value) = self.calculations.get(item) {
-                            export_content.push_str(&format!("STORE {} {}\n", item, calc_value));
+                            export_content.push_str(&format!("STORE {item} {calc_value}\n"));
                         } else if let Some(var_value) = self.variables.get(item) {
-                            export_content.push_str(&format!("STORE {} {}\n", item, var_value));
+                            export_content.push_str(&format!("STORE {item} {var_value}\n"));
                         } else if let Some(array_value) = self.arrays.get(item) {
-                            export_content.push_str(&format!("ARRAY {}\n", item));
+                            export_content.push_str(&format!("ARRAY {item}\n"));
                             for value in array_value {
-                                export_content.push_str(&format!("PUSH {} {}\n", item, value));
+                                export_content.push_str(&format!("PUSH {item} {value}\n"));
                             }
                         }
                     }
 
                     // Write to file
                     fs::write(&filename, export_content)
-                        .map_err(|e| format!("Failed to write to file '{}': {}", filename, e))?;
+                        .map_err(|e| format!("Failed to write to file '{filename}': {e}"))?;
 
                     println!("Exported {} items to {}", items.len(), filename);
                 }
@@ -452,7 +456,7 @@ impl Interpreter {
                             self.variables.insert(result_var.clone(), return_value);
                         }
                     } else {
-                        return Err(format!("Function '{}' not found", function_name));
+                        return Err(format!("Function '{function_name}' not found"));
                     }
                 }
                 Statement::Return { value } => {
@@ -461,7 +465,7 @@ impl Interpreter {
                     } else {
                         0.0
                     };
-                    return Err(format!("RETURN:{}", return_val)); // Special error code for return
+                    return Err(format!("RETURN:{return_val}")); // Special error code for return
                 }
                 Statement::ArraySort {
                     array_name,
@@ -479,7 +483,7 @@ impl Interpreter {
                             if ascending { "ascending" } else { "descending" }
                         );
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::ArrayFilter {
@@ -526,15 +530,15 @@ impl Interpreter {
                             self.arrays.get(&result_array).unwrap().len()
                         );
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::ArrayReverse { array_name } => {
                     if let Some(array) = self.arrays.get_mut(&array_name) {
                         array.reverse();
-                        println!("Array '{}' reversed", array_name);
+                        println!("Array '{array_name}' reversed");
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::ArrayMap {
@@ -578,7 +582,7 @@ impl Interpreter {
                             self.arrays.get(&result_array).unwrap().len()
                         );
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::ArraySum {
@@ -588,9 +592,9 @@ impl Interpreter {
                     if let Some(array) = self.arrays.get(&array_name) {
                         let sum: f64 = array.iter().sum();
                         self.variables.insert(result_name.clone(), sum);
-                        println!("Sum of array '{}' is {}", array_name, sum);
+                        println!("Sum of array '{array_name}' is {sum}");
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::ArrayJoin {
@@ -605,14 +609,14 @@ impl Interpreter {
                             .collect::<Vec<_>>()
                             .join(&separator);
                         self.intents.insert(result_name.clone(), joined.clone());
-                        println!("Joined array '{}' into string: {}", array_name, joined);
+                        println!("Joined array '{array_name}' into string: {joined}");
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::DictCreate { name } => {
                     self.dicts.insert(name.clone(), HashMap::new());
-                    println!("Dictionary '{}' created", name);
+                    println!("Dictionary '{name}' created");
                 }
                 Statement::DictPut {
                     dict_name,
@@ -622,9 +626,9 @@ impl Interpreter {
                     let val = self.evaluate_expression(&value)?;
                     if let Some(dict) = self.dicts.get_mut(&dict_name) {
                         dict.insert(key.clone(), val);
-                        println!("Set {}['{}'] = {}", dict_name, key, val);
+                        println!("Set {dict_name}['{key}'] = {val}");
                     } else {
-                        return Err(format!("Dictionary '{}' not found", dict_name));
+                        return Err(format!("Dictionary '{dict_name}' not found"));
                     }
                 }
                 Statement::DictFetch {
@@ -637,12 +641,11 @@ impl Interpreter {
                             self.variables.insert(result_name.clone(), value);
                         } else {
                             return Err(format!(
-                                "Key '{}' not found in dictionary '{}'",
-                                key, dict_name
+                                "Key '{key}' not found in dictionary '{dict_name}'"
                             ));
                         }
                     } else {
-                        return Err(format!("Dictionary '{}' not found", dict_name));
+                        return Err(format!("Dictionary '{dict_name}' not found"));
                     }
                 }
                 Statement::DictKeys {
@@ -652,9 +655,9 @@ impl Interpreter {
                     if let Some(_dict) = self.dicts.get(&dict_name) {
                         let keys: Vec<f64> = Vec::new(); // Keys as array indices for now
                         self.arrays.insert(result_array.clone(), keys);
-                        println!("Extracted keys from '{}'", dict_name);
+                        println!("Extracted keys from '{dict_name}'");
                     } else {
-                        return Err(format!("Dictionary '{}' not found", dict_name));
+                        return Err(format!("Dictionary '{dict_name}' not found"));
                     }
                 }
                 Statement::DictValues {
@@ -665,19 +668,18 @@ impl Interpreter {
                         let values: Vec<f64> = dict.values().copied().collect();
                         self.arrays.insert(result_array.clone(), values);
                         println!(
-                            "Extracted values from '{}' to array '{}'",
-                            dict_name, result_array
+                            "Extracted values from '{dict_name}' to array '{result_array}'"
                         );
                     } else {
-                        return Err(format!("Dictionary '{}' not found", dict_name));
+                        return Err(format!("Dictionary '{dict_name}' not found"));
                     }
                 }
                 Statement::DictDelete { dict_name, key } => {
                     if let Some(dict) = self.dicts.get_mut(&dict_name) {
                         dict.remove(&key);
-                        println!("Deleted key '{}' from '{}'", key, dict_name);
+                        println!("Deleted key '{key}' from '{dict_name}'");
                     } else {
-                        return Err(format!("Dictionary '{}' not found", dict_name));
+                        return Err(format!("Dictionary '{dict_name}' not found"));
                     }
                 }
                 Statement::ReadFile {
@@ -688,7 +690,7 @@ impl Interpreter {
                         self.intents.insert(result_name.clone(), content.clone());
                         println!("Read {} bytes from '{}'", content.len(), filename);
                     }
-                    Err(e) => return Err(format!("Failed to read file '{}': {}", filename, e)),
+                    Err(e) => return Err(format!("Failed to read file '{filename}': {e}")),
                 },
                 Statement::WriteFile { filename, content } => {
                     let actual_content = if content.starts_with("${") && content.ends_with("}") {
@@ -704,7 +706,7 @@ impl Interpreter {
                     match fs::write(&filename, actual_content.as_bytes()) {
                         Ok(_) => println!("Wrote {} bytes to '{}'", actual_content.len(), filename),
                         Err(e) => {
-                            return Err(format!("Failed to write to file '{}': {}", filename, e));
+                            return Err(format!("Failed to write to file '{filename}': {e}"));
                         }
                     }
                 }
@@ -732,7 +734,7 @@ impl Interpreter {
                             println!("Appended {} bytes to '{}'", actual_content.len(), filename)
                         }
                         Err(e) => {
-                            return Err(format!("Failed to append to file '{}': {}", filename, e));
+                            return Err(format!("Failed to append to file '{filename}': {e}"));
                         }
                     }
                 }
@@ -743,24 +745,24 @@ impl Interpreter {
                     let exists = Path::new(&filename).exists();
                     self.variables
                         .insert(result_name.clone(), if exists { 1.0 } else { 0.0 });
-                    println!("File '{}' exists: {}", filename, exists);
+                    println!("File '{filename}' exists: {exists}");
                 }
                 Statement::Sleep { milliseconds } => {
                     let ms = self.evaluate_expression(&milliseconds)? as u64;
-                    println!("Sleeping for {} ms...", ms);
+                    println!("Sleeping for {ms} ms...");
                     thread::sleep(Duration::from_millis(ms));
                 }
                 Statement::Input {
                     prompt,
                     result_name,
                 } => {
-                    print!("{}", prompt);
+                    print!("{prompt}");
                     io::Write::flush(&mut io::stdout()).unwrap();
 
                     let mut input = String::new();
                     io::stdin()
                         .read_line(&mut input)
-                        .map_err(|e| format!("Failed to read input: {}", e))?;
+                        .map_err(|e| format!("Failed to read input: {e}"))?;
 
                     let trimmed = input.trim().to_string();
 
@@ -821,7 +823,7 @@ impl Interpreter {
                         current += step_val;
                     }
                     self.arrays.insert(result_array.clone(), range_array);
-                    println!("Generated range array '{}'", result_array);
+                    println!("Generated range array '{result_array}'");
                 }
                 Statement::Unique {
                     array_name,
@@ -835,9 +837,9 @@ impl Interpreter {
                             }
                         }
                         self.arrays.insert(result_array.clone(), unique);
-                        println!("Created unique array '{}'", result_array);
+                        println!("Created unique array '{result_array}'");
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::Concat {
@@ -851,9 +853,9 @@ impl Interpreter {
                         let mut concatenated = arr1.clone();
                         concatenated.extend(arr2);
                         self.arrays.insert(result_array.clone(), concatenated);
-                        println!("Concatenated arrays into '{}'", result_array);
+                        println!("Concatenated arrays into '{result_array}'");
                     } else {
-                        return Err(format!("Array not found"));
+                        return Err("Array not found".to_string());
                     }
                 }
                 Statement::Take {
@@ -865,9 +867,9 @@ impl Interpreter {
                     if let Some(array) = self.arrays.get(&array_name) {
                         let taken: Vec<f64> = array.iter().take(n).copied().collect();
                         self.arrays.insert(result_array.clone(), taken);
-                        println!("Took {} elements into '{}'", n, result_array);
+                        println!("Took {n} elements into '{result_array}'");
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::Drop {
@@ -879,9 +881,9 @@ impl Interpreter {
                     if let Some(array) = self.arrays.get(&array_name) {
                         let dropped: Vec<f64> = array.iter().skip(n).copied().collect();
                         self.arrays.insert(result_array.clone(), dropped);
-                        println!("Dropped {} elements, result in '{}'", n, result_array);
+                        println!("Dropped {n} elements, result in '{result_array}'");
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::Find {
@@ -896,13 +898,13 @@ impl Interpreter {
                             self.variables.insert("item".to_string(), value);
                             if self.evaluate_expression(&condition)? != 0.0 {
                                 self.variables.insert(result_name.clone(), value);
-                                println!("Found value: {}", value);
+                                println!("Found value: {value}");
                                 break;
                             }
                         }
                         self.variables.remove("item");
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::Average {
@@ -913,23 +915,23 @@ impl Interpreter {
                         if !array.is_empty() {
                             let avg: f64 = array.iter().sum::<f64>() / array.len() as f64;
                             self.variables.insert(result_name.clone(), avg);
-                            println!("Average of '{}' is {}", array_name, avg);
+                            println!("Average of '{array_name}' is {avg}");
                         } else {
                             self.variables.insert(result_name.clone(), 0.0);
                         }
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::Clear { target } => {
                     if self.arrays.contains_key(&target) {
                         self.arrays.get_mut(&target).unwrap().clear();
-                        println!("Cleared array '{}'", target);
+                        println!("Cleared array '{target}'");
                     } else if self.dicts.contains_key(&target) {
                         self.dicts.get_mut(&target).unwrap().clear();
-                        println!("Cleared dictionary '{}'", target);
+                        println!("Cleared dictionary '{target}'");
                     } else {
-                        return Err(format!("Target '{}' not found", target));
+                        return Err(format!("Target '{target}' not found"));
                     }
                 }
                 Statement::Shuffle { array_name } => {
@@ -948,9 +950,9 @@ impl Interpreter {
                                 array.swap(i, j);
                             }
                         }
-                        println!("Shuffled array '{}'", array_name);
+                        println!("Shuffled array '{array_name}'");
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::Clone {
@@ -959,12 +961,12 @@ impl Interpreter {
                 } => {
                     if let Some(array) = self.arrays.get(&source).cloned() {
                         self.arrays.insert(destination.clone(), array);
-                        println!("Cloned array '{}' to '{}'", source, destination);
+                        println!("Cloned array '{source}' to '{destination}'");
                     } else if let Some(dict) = self.dicts.get(&source).cloned() {
                         self.dicts.insert(destination.clone(), dict);
-                        println!("Cloned dictionary '{}' to '{}'", source, destination);
+                        println!("Cloned dictionary '{source}' to '{destination}'");
                     } else {
-                        return Err(format!("Source '{}' not found", source));
+                        return Err(format!("Source '{source}' not found"));
                     }
                 }
                 Statement::Fold {
@@ -985,9 +987,9 @@ impl Interpreter {
                         self.variables.insert(result_name.clone(), accumulator);
                         self.variables.remove("acc");
                         self.variables.remove("item");
-                        println!("Folded array '{}' into result: {}", array_name, accumulator);
+                        println!("Folded array '{array_name}' into result: {accumulator}");
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::Zip {
@@ -1006,11 +1008,10 @@ impl Interpreter {
                         }
                         self.arrays.insert(result_array.clone(), zipped);
                         println!(
-                            "Zipped arrays '{}' and '{}' into '{}'",
-                            array1, array2, result_array
+                            "Zipped arrays '{array1}' and '{array2}' into '{result_array}'"
                         );
                     } else {
-                        return Err(format!("One or both arrays not found"));
+                        return Err("One or both arrays not found".to_string());
                     }
                 }
                 Statement::Flatten {
@@ -1020,9 +1021,9 @@ impl Interpreter {
                     // For simplicity, just copy the array (would need nested array support for true flatten)
                     if let Some(array) = self.arrays.get(&array_name).cloned() {
                         self.arrays.insert(result_array.clone(), array);
-                        println!("Flattened array '{}' into '{}'", array_name, result_array);
+                        println!("Flattened array '{array_name}' into '{result_array}'");
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::Count {
@@ -1042,11 +1043,10 @@ impl Interpreter {
                         self.variables.remove("item");
                         self.variables.insert(result_name.clone(), count as f64);
                         println!(
-                            "Counted {} items matching condition in '{}'",
-                            count, array_name
+                            "Counted {count} items matching condition in '{array_name}'"
                         );
                     } else {
-                        return Err(format!("Array '{}' not found", array_name));
+                        return Err(format!("Array '{array_name}' not found"));
                     }
                 }
                 Statement::Replace {
@@ -1058,9 +1058,9 @@ impl Interpreter {
                     if let Some(target_str) = self.intents.get(&text) {
                         let replaced = target_str.replace(&pattern, &replacement);
                         self.intents.insert(result_name.clone(), replaced.clone());
-                        println!("Replaced '{}' with '{}' in string", pattern, replacement);
+                        println!("Replaced '{pattern}' with '{replacement}' in string");
                     } else {
-                        return Err(format!("String '{}' not found", text));
+                        return Err(format!("String '{text}' not found"));
                     }
                 }
                 Statement::Split {
@@ -1080,7 +1080,7 @@ impl Interpreter {
                             parts.len()
                         );
                     } else {
-                        return Err(format!("String '{}' not found", text));
+                        return Err(format!("String '{text}' not found"));
                     }
                 }
             }
@@ -1112,7 +1112,7 @@ impl Interpreter {
                     .get(name)
                     .or_else(|| self.calculations.get(name))
                     .copied()
-                    .ok_or_else(|| format!("Variable '{}' not found", name))
+                    .ok_or_else(|| format!("Variable '{name}' not found"))
             }
             Expression::BinaryOp {
                 left,
@@ -1173,7 +1173,7 @@ impl Interpreter {
                             if let Some(string_val) = self.intents.get(name) {
                                 Ok(string_val.len() as f64)
                             } else {
-                                Err(format!("String '{}' not found for LENGTH", name))
+                                Err(format!("String '{name}' not found for LENGTH"))
                             }
                         } else {
                             Err("LENGTH function error".to_string())
@@ -1185,13 +1185,13 @@ impl Interpreter {
                             if let Some(array) = self.arrays.get(name) {
                                 Ok(array.len() as f64)
                             } else {
-                                Err(format!("Array '{}' not found for SIZE", name))
+                                Err(format!("Array '{name}' not found for SIZE"))
                             }
                         } else {
                             Err("SIZE function error".to_string())
                         }
                     }
-                    _ => Err(format!("Invalid operator: {:?}", operator)),
+                    _ => Err(format!("Invalid operator: {operator:?}")),
                 }
             }
         }

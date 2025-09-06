@@ -521,14 +521,14 @@ impl Parser {
         let name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected identifier after INTENT"));
+            return Err("Expected identifier after INTENT".to_string());
         };
         self.advance();
 
         let message = if let Token::StringLiteral(msg) = &self.current_token {
             msg.clone()
         } else {
-            return Err(format!("Expected string literal after intent name"));
+            return Err("Expected string literal after intent name".to_string());
         };
         self.advance();
 
@@ -541,7 +541,7 @@ impl Parser {
         let intent_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected identifier after MANIFEST"));
+            return Err("Expected identifier after MANIFEST".to_string());
         };
         self.advance();
 
@@ -552,7 +552,7 @@ impl Parser {
                 self.advance();
                 Some(message)
             } else {
-                return Err(format!("Expected string after WITH"));
+                return Err("Expected string after WITH".to_string());
             }
         } else {
             None
@@ -570,7 +570,7 @@ impl Parser {
         let name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected identifier after CALCULATE"));
+            return Err("Expected identifier after CALCULATE".to_string());
         };
         self.advance();
 
@@ -585,7 +585,7 @@ impl Parser {
         let name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected identifier after STORE"));
+            return Err("Expected identifier after STORE".to_string());
         };
         self.advance();
 
@@ -600,7 +600,7 @@ impl Parser {
         let name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected identifier after COMBINE"));
+            return Err("Expected identifier after COMBINE".to_string());
         };
         self.advance();
 
@@ -617,7 +617,7 @@ impl Parser {
                     self.advance();
                 }
                 Token::Identifier(id) => {
-                    parts.push(format!("${{{}}}", id));
+                    parts.push(format!("${{{id}}}"));
                     self.advance();
                 }
                 _ => break,
@@ -625,9 +625,7 @@ impl Parser {
         }
 
         if parts.is_empty() {
-            return Err(format!(
-                "Expected strings or identifiers after COMBINE name"
-            ));
+            return Err("Expected strings or identifiers after COMBINE name".to_string());
         }
 
         Ok(Statement::Combine { name, parts })
@@ -639,12 +637,12 @@ impl Parser {
         let count = self.parse_expression()?;
 
         if self.current_token != Token::Times {
-            return Err(format!("Expected TIMES after repeat count"));
+            return Err("Expected TIMES after repeat count".to_string());
         }
         self.advance(); // Skip TIMES
 
         if self.current_token != Token::Do {
-            return Err(format!("Expected DO after TIMES"));
+            return Err("Expected DO after TIMES".to_string());
         }
         self.advance(); // Skip DO
 
@@ -676,7 +674,7 @@ impl Parser {
         }
 
         if self.current_token != Token::End {
-            return Err(format!("Expected END to close REPEAT"));
+            return Err("Expected END to close REPEAT".to_string());
         }
         self.advance(); // Skip END
 
@@ -689,7 +687,7 @@ impl Parser {
         let condition = self.parse_expression()?;
 
         if self.current_token != Token::Then {
-            return Err(format!("Expected THEN after IF condition"));
+            return Err("Expected THEN after IF condition".to_string());
         }
         self.advance(); // Skip THEN
 
@@ -760,7 +758,7 @@ impl Parser {
         };
 
         if self.current_token != Token::End {
-            return Err(format!("Expected END to close IF"));
+            return Err("Expected END to close IF".to_string());
         }
         self.advance(); // Skip END
 
@@ -787,7 +785,7 @@ impl Parser {
                     self.advance();
                 }
                 Token::Identifier(id) => {
-                    items.push(format!("${{{}}}", id));
+                    items.push(format!("${{{id}}}"));
                     self.advance();
                 }
                 _ => break,
@@ -795,7 +793,7 @@ impl Parser {
         }
 
         if items.is_empty() {
-            return Err(format!("Expected items after PRINT"));
+            return Err("Expected items after PRINT".to_string());
         }
 
         Ok(Statement::Print { items })
@@ -807,7 +805,7 @@ impl Parser {
         let condition = self.parse_expression()?;
 
         if self.current_token != Token::Do {
-            return Err(format!("Expected DO after WHILE condition"));
+            return Err("Expected DO after WHILE condition".to_string());
         }
         self.advance(); // Skip DO
 
@@ -842,7 +840,7 @@ impl Parser {
         }
 
         if self.current_token != Token::End {
-            return Err(format!("Expected END to close WHILE"));
+            return Err("Expected END to close WHILE".to_string());
         }
         self.advance(); // Skip END
 
@@ -855,7 +853,7 @@ impl Parser {
         let variable = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected variable name after INCREMENT"));
+            return Err("Expected variable name after INCREMENT".to_string());
         };
         self.advance();
 
@@ -868,7 +866,7 @@ impl Parser {
         let variable = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected variable name after DECREMENT"));
+            return Err("Expected variable name after DECREMENT".to_string());
         };
         self.advance();
 
@@ -881,14 +879,14 @@ impl Parser {
         let variable = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected variable name after FOR"));
+            return Err("Expected variable name after FOR".to_string());
         };
         self.advance();
 
         let start = self.parse_expression()?;
 
         if self.current_token != Token::To {
-            return Err(format!("Expected TO after FOR start value"));
+            return Err("Expected TO after FOR start value".to_string());
         }
         self.advance(); // Skip TO
 
@@ -902,7 +900,7 @@ impl Parser {
         };
 
         if self.current_token != Token::Do {
-            return Err(format!("Expected DO after FOR parameters"));
+            return Err("Expected DO after FOR parameters".to_string());
         }
         self.advance(); // Skip DO
 
@@ -943,7 +941,7 @@ impl Parser {
         }
 
         if self.current_token != Token::End {
-            return Err(format!("Expected END to close FOR"));
+            return Err("Expected END to close FOR".to_string());
         }
         self.advance(); // Skip END
 
@@ -983,7 +981,7 @@ impl Parser {
 
         while self.current_token != Token::Catch {
             match self.current_token {
-                Token::EOF => return Err(format!("Expected CATCH after TRY")),
+                Token::EOF => return Err("Expected CATCH after TRY".to_string()),
                 Token::Intent => try_body.push(self.parse_intent_declaration()?),
                 Token::Manifest => try_body.push(self.parse_manifest_call()?),
                 Token::Calculate => try_body.push(self.parse_calculate()?),
@@ -1012,7 +1010,7 @@ impl Parser {
 
         while self.current_token != Token::End {
             match self.current_token {
-                Token::EOF => return Err(format!("Expected END after CATCH")),
+                Token::EOF => return Err("Expected END after CATCH".to_string()),
                 Token::Intent => catch_body.push(self.parse_intent_declaration()?),
                 Token::Manifest => catch_body.push(self.parse_manifest_call()?),
                 Token::Calculate => catch_body.push(self.parse_calculate()?),
@@ -1036,7 +1034,7 @@ impl Parser {
         }
 
         if self.current_token != Token::End {
-            return Err(format!("Expected END to close TRY/CATCH"));
+            return Err("Expected END to close TRY/CATCH".to_string());
         }
         self.advance(); // Skip END
 
@@ -1057,7 +1055,7 @@ impl Parser {
         let name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected identifier after {}", operation));
+            return Err(format!("Expected identifier after {operation}"));
         };
         self.advance();
 
@@ -1074,8 +1072,7 @@ impl Parser {
             }
             _ => {
                 return Err(format!(
-                    "Expected string literal or identifier after {}",
-                    operation
+                    "Expected string literal or identifier after {operation}"
                 ));
             }
         };
@@ -1257,14 +1254,14 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after SIZE"));
+            return Err("Expected array name after SIZE".to_string());
         };
         self.advance();
 
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for SIZE"));
+            return Err("Expected result variable name for SIZE".to_string());
         };
         self.advance();
 
@@ -1508,7 +1505,7 @@ impl Parser {
                 self.advance();
 
                 if self.current_token != Token::LeftParen {
-                    return Err(format!("Expected ( after {:?}", op));
+                    return Err(format!("Expected ( after {op:?}"));
                 }
                 self.advance();
 
@@ -1519,7 +1516,7 @@ impl Parser {
                         let second_arg = self.parse_primary()?;
 
                         if self.current_token != Token::RightParen {
-                            return Err(format!("Expected ) after function arguments"));
+                            return Err("Expected ) after function arguments".to_string());
                         }
                         self.advance();
 
@@ -1534,7 +1531,7 @@ impl Parser {
                         let arg = self.parse_primary()?;
 
                         if self.current_token != Token::RightParen {
-                            return Err(format!("Expected ) after function argument"));
+                            return Err("Expected ) after function argument".to_string());
                         }
                         self.advance();
 
@@ -1547,7 +1544,7 @@ impl Parser {
                     Token::Random => {
                         // Zero-argument function
                         if self.current_token != Token::RightParen {
-                            return Err(format!("Expected ) after RANDOM"));
+                            return Err("Expected ) after RANDOM".to_string());
                         }
                         self.advance();
 
@@ -1564,7 +1561,7 @@ impl Parser {
                             self.advance();
 
                             if self.current_token != Token::RightParen {
-                                return Err(format!("Expected ) after LENGTH argument"));
+                                return Err("Expected ) after LENGTH argument".to_string());
                             }
                             self.advance();
 
@@ -1574,7 +1571,7 @@ impl Parser {
                             self.advance();
 
                             if self.current_token != Token::RightParen {
-                                return Err(format!("Expected ) after LENGTH argument"));
+                                return Err("Expected ) after LENGTH argument".to_string());
                             }
                             self.advance();
 
@@ -1585,7 +1582,7 @@ impl Parser {
                                 right: Box::new(Expression::Number(0.0)), // Dummy
                             })
                         } else {
-                            return Err(format!("LENGTH expects string literal or identifier"));
+                            return Err("LENGTH expects string literal or identifier".to_string());
                         }
                     }
                     _ => unreachable!(),
@@ -1598,7 +1595,7 @@ impl Parser {
                     self.advance();
                     Ok(Expression::Recall(var_name))
                 } else {
-                    Err(format!("Expected identifier after RECALL"))
+                    Err("Expected identifier after RECALL".to_string())
                 }
             }
             Token::Minus => {
@@ -1614,7 +1611,7 @@ impl Parser {
                 self.advance(); // Skip (
                 let expr = self.parse_expression()?;
                 if self.current_token != Token::RightParen {
-                    return Err(format!("Expected closing parenthesis"));
+                    return Err("Expected closing parenthesis".to_string());
                 }
                 self.advance(); // Skip )
                 Ok(expr)
@@ -1632,7 +1629,7 @@ impl Parser {
         let function_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected function name after FUNCTION"));
+            return Err("Expected function name after FUNCTION".to_string());
         };
         self.advance();
 
@@ -1653,18 +1650,18 @@ impl Parser {
                         self.advance();
                     }
                 } else {
-                    return Err(format!("Expected parameter name"));
+                    return Err("Expected parameter name".to_string());
                 }
             }
 
             if self.current_token != Token::RightParen {
-                return Err(format!("Expected ) after function parameters"));
+                return Err("Expected ) after function parameters".to_string());
             }
             self.advance(); // Skip )
         }
 
         if self.current_token != Token::Do {
-            return Err(format!("Expected DO after function signature"));
+            return Err("Expected DO after function signature".to_string());
         }
         self.advance(); // Skip DO
 
@@ -1692,7 +1689,7 @@ impl Parser {
         }
 
         if self.current_token != Token::End {
-            return Err(format!("Expected END to close FUNCTION"));
+            return Err("Expected END to close FUNCTION".to_string());
         }
         self.advance(); // Skip END
 
@@ -1709,7 +1706,7 @@ impl Parser {
         let function_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected function name after CALL"));
+            return Err("Expected function name after CALL".to_string());
         };
         self.advance();
 
@@ -1731,7 +1728,7 @@ impl Parser {
             }
 
             if self.current_token != Token::RightParen {
-                return Err(format!("Expected ) after function arguments"));
+                return Err("Expected ) after function arguments".to_string());
             }
             self.advance(); // Skip )
         }
@@ -1767,7 +1764,7 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after SORT"));
+            return Err("Expected array name after SORT".to_string());
         };
         self.advance();
 
@@ -1794,7 +1791,7 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after FILTER"));
+            return Err("Expected array name after FILTER".to_string());
         };
         self.advance();
 
@@ -1803,7 +1800,7 @@ impl Parser {
         let result_array = if let Token::Identifier(result_name) = &self.current_token {
             result_name.clone()
         } else {
-            return Err(format!("Expected result array name for FILTER"));
+            return Err("Expected result array name for FILTER".to_string());
         };
         self.advance();
 
@@ -1820,7 +1817,7 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after REVERSE"));
+            return Err("Expected array name after REVERSE".to_string());
         };
         self.advance();
 
@@ -1833,7 +1830,7 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after MAP"));
+            return Err("Expected array name after MAP".to_string());
         };
         self.advance();
 
@@ -1842,7 +1839,7 @@ impl Parser {
         let result_array = if let Token::Identifier(result_name) = &self.current_token {
             result_name.clone()
         } else {
-            return Err(format!("Expected result array name for MAP"));
+            return Err("Expected result array name for MAP".to_string());
         };
         self.advance();
 
@@ -1859,14 +1856,14 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after SUM"));
+            return Err("Expected array name after SUM".to_string());
         };
         self.advance();
 
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for SUM"));
+            return Err("Expected result variable name for SUM".to_string());
         };
         self.advance();
 
@@ -1882,21 +1879,21 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after JOIN"));
+            return Err("Expected array name after JOIN".to_string());
         };
         self.advance();
 
         let separator = if let Token::StringLiteral(sep) = &self.current_token {
             sep.clone()
         } else {
-            return Err(format!("Expected separator string for JOIN"));
+            return Err("Expected separator string for JOIN".to_string());
         };
         self.advance();
 
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for JOIN"));
+            return Err("Expected result variable name for JOIN".to_string());
         };
         self.advance();
 
@@ -1913,7 +1910,7 @@ impl Parser {
         let name = if let Token::Identifier(n) = &self.current_token {
             n.clone()
         } else {
-            return Err(format!("Expected dictionary name after DICT"));
+            return Err("Expected dictionary name after DICT".to_string());
         };
         self.advance();
 
@@ -1926,7 +1923,7 @@ impl Parser {
         let dict_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected dictionary name after PUT"));
+            return Err("Expected dictionary name after PUT".to_string());
         };
         self.advance();
 
@@ -1935,7 +1932,7 @@ impl Parser {
         } else if let Token::Identifier(k) = &self.current_token {
             k.clone()
         } else {
-            return Err(format!("Expected key for PUT"));
+            return Err("Expected key for PUT".to_string());
         };
         self.advance();
 
@@ -1954,7 +1951,7 @@ impl Parser {
         let dict_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected dictionary name after FETCH"));
+            return Err("Expected dictionary name after FETCH".to_string());
         };
         self.advance();
 
@@ -1963,14 +1960,14 @@ impl Parser {
         } else if let Token::Identifier(k) = &self.current_token {
             k.clone()
         } else {
-            return Err(format!("Expected key for FETCH"));
+            return Err("Expected key for FETCH".to_string());
         };
         self.advance();
 
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for FETCH"));
+            return Err("Expected result variable name for FETCH".to_string());
         };
         self.advance();
 
@@ -1987,14 +1984,14 @@ impl Parser {
         let dict_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected dictionary name after KEYS"));
+            return Err("Expected dictionary name after KEYS".to_string());
         };
         self.advance();
 
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result array name for KEYS"));
+            return Err("Expected result array name for KEYS".to_string());
         };
         self.advance();
 
@@ -2010,14 +2007,14 @@ impl Parser {
         let dict_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected dictionary name after VALUES"));
+            return Err("Expected dictionary name after VALUES".to_string());
         };
         self.advance();
 
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result array name for VALUES"));
+            return Err("Expected result array name for VALUES".to_string());
         };
         self.advance();
 
@@ -2033,7 +2030,7 @@ impl Parser {
         let dict_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected dictionary name after DELETE"));
+            return Err("Expected dictionary name after DELETE".to_string());
         };
         self.advance();
 
@@ -2042,7 +2039,7 @@ impl Parser {
         } else if let Token::Identifier(k) = &self.current_token {
             k.clone()
         } else {
-            return Err(format!("Expected key for DELETE"));
+            return Err("Expected key for DELETE".to_string());
         };
         self.advance();
 
@@ -2063,7 +2060,7 @@ impl Parser {
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result array name for RANGE"));
+            return Err("Expected result array name for RANGE".to_string());
         };
         self.advance();
 
@@ -2080,14 +2077,14 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after UNIQUE"));
+            return Err("Expected array name after UNIQUE".to_string());
         };
         self.advance();
 
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result array name for UNIQUE"));
+            return Err("Expected result array name for UNIQUE".to_string());
         };
         self.advance();
 
@@ -2102,21 +2099,21 @@ impl Parser {
         let array1 = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected first array name after CONCAT"));
+            return Err("Expected first array name after CONCAT".to_string());
         };
         self.advance();
 
         let array2 = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected second array name for CONCAT"));
+            return Err("Expected second array name for CONCAT".to_string());
         };
         self.advance();
 
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result array name for CONCAT"));
+            return Err("Expected result array name for CONCAT".to_string());
         };
         self.advance();
 
@@ -2132,7 +2129,7 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after TAKE"));
+            return Err("Expected array name after TAKE".to_string());
         };
         self.advance();
 
@@ -2141,7 +2138,7 @@ impl Parser {
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result array name for TAKE"));
+            return Err("Expected result array name for TAKE".to_string());
         };
         self.advance();
 
@@ -2157,7 +2154,7 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after DROP"));
+            return Err("Expected array name after DROP".to_string());
         };
         self.advance();
 
@@ -2166,7 +2163,7 @@ impl Parser {
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result array name for DROP"));
+            return Err("Expected result array name for DROP".to_string());
         };
         self.advance();
 
@@ -2182,7 +2179,7 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after FIND"));
+            return Err("Expected array name after FIND".to_string());
         };
         self.advance();
 
@@ -2191,7 +2188,7 @@ impl Parser {
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for FIND"));
+            return Err("Expected result variable name for FIND".to_string());
         };
         self.advance();
 
@@ -2207,14 +2204,14 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after AVERAGE"));
+            return Err("Expected array name after AVERAGE".to_string());
         };
         self.advance();
 
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for AVERAGE"));
+            return Err("Expected result variable name for AVERAGE".to_string());
         };
         self.advance();
 
@@ -2229,7 +2226,7 @@ impl Parser {
         let target = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected target name after CLEAR"));
+            return Err("Expected target name after CLEAR".to_string());
         };
         self.advance();
 
@@ -2241,7 +2238,7 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after SHUFFLE"));
+            return Err("Expected array name after SHUFFLE".to_string());
         };
         self.advance();
 
@@ -2253,14 +2250,14 @@ impl Parser {
         let source = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected source name after CLONE"));
+            return Err("Expected source name after CLONE".to_string());
         };
         self.advance();
 
         let destination = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected destination name for CLONE"));
+            return Err("Expected destination name for CLONE".to_string());
         };
         self.advance();
 
@@ -2276,14 +2273,14 @@ impl Parser {
         let filename = if let Token::StringLiteral(f) = &self.current_token {
             f.clone()
         } else {
-            return Err(format!("Expected filename string after READ_FILE"));
+            return Err("Expected filename string after READ_FILE".to_string());
         };
         self.advance();
 
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for READ_FILE"));
+            return Err("Expected result variable name for READ_FILE".to_string());
         };
         self.advance();
 
@@ -2299,16 +2296,16 @@ impl Parser {
         let filename = if let Token::StringLiteral(f) = &self.current_token {
             f.clone()
         } else {
-            return Err(format!("Expected filename string after WRITE_FILE"));
+            return Err("Expected filename string after WRITE_FILE".to_string());
         };
         self.advance();
 
         let content = if let Token::StringLiteral(c) = &self.current_token {
             c.clone()
         } else if let Token::Identifier(var) = &self.current_token {
-            format!("${{{}}}", var)
+            format!("${{{var}}}")
         } else {
-            return Err(format!("Expected content for WRITE_FILE"));
+            return Err("Expected content for WRITE_FILE".to_string());
         };
         self.advance();
 
@@ -2321,16 +2318,16 @@ impl Parser {
         let filename = if let Token::StringLiteral(f) = &self.current_token {
             f.clone()
         } else {
-            return Err(format!("Expected filename string after APPEND_FILE"));
+            return Err("Expected filename string after APPEND_FILE".to_string());
         };
         self.advance();
 
         let content = if let Token::StringLiteral(c) = &self.current_token {
             c.clone()
         } else if let Token::Identifier(var) = &self.current_token {
-            format!("${{{}}}", var)
+            format!("${{{var}}}")
         } else {
-            return Err(format!("Expected content for APPEND_FILE"));
+            return Err("Expected content for APPEND_FILE".to_string());
         };
         self.advance();
 
@@ -2343,14 +2340,14 @@ impl Parser {
         let filename = if let Token::StringLiteral(f) = &self.current_token {
             f.clone()
         } else {
-            return Err(format!("Expected filename string after EXISTS"));
+            return Err("Expected filename string after EXISTS".to_string());
         };
         self.advance();
 
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for EXISTS"));
+            return Err("Expected result variable name for EXISTS".to_string());
         };
         self.advance();
 
@@ -2374,14 +2371,14 @@ impl Parser {
         let prompt = if let Token::StringLiteral(p) = &self.current_token {
             p.clone()
         } else {
-            return Err(format!("Expected prompt string after INPUT"));
+            return Err("Expected prompt string after INPUT".to_string());
         };
         self.advance();
 
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for INPUT"));
+            return Err("Expected result variable name for INPUT".to_string());
         };
         self.advance();
 
@@ -2397,14 +2394,14 @@ impl Parser {
         let variable = if let Token::Identifier(v) = &self.current_token {
             v.clone()
         } else {
-            return Err(format!("Expected variable name after TYPE"));
+            return Err("Expected variable name after TYPE".to_string());
         };
         self.advance();
 
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for TYPE"));
+            return Err("Expected result variable name for TYPE".to_string());
         };
         self.advance();
 
@@ -2422,14 +2419,14 @@ impl Parser {
         } else if let Token::StringLiteral(s) = &self.current_token {
             s.clone()
         } else {
-            return Err(format!("Expected source for PARSE"));
+            return Err("Expected source for PARSE".to_string());
         };
         self.advance();
 
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for PARSE"));
+            return Err("Expected result variable name for PARSE".to_string());
         };
         self.advance();
 
@@ -2444,7 +2441,7 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after FOLD"));
+            return Err("Expected array name after FOLD".to_string());
         };
         self.advance();
 
@@ -2454,7 +2451,7 @@ impl Parser {
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for FOLD"));
+            return Err("Expected result variable name for FOLD".to_string());
         };
         self.advance();
 
@@ -2471,21 +2468,21 @@ impl Parser {
         let array1 = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected first array name after ZIP"));
+            return Err("Expected first array name after ZIP".to_string());
         };
         self.advance();
 
         let array2 = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected second array name for ZIP"));
+            return Err("Expected second array name for ZIP".to_string());
         };
         self.advance();
 
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result array name for ZIP"));
+            return Err("Expected result array name for ZIP".to_string());
         };
         self.advance();
 
@@ -2501,14 +2498,14 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after FLATTEN"));
+            return Err("Expected array name after FLATTEN".to_string());
         };
         self.advance();
 
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result array name for FLATTEN"));
+            return Err("Expected result array name for FLATTEN".to_string());
         };
         self.advance();
 
@@ -2523,7 +2520,7 @@ impl Parser {
         let array_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected array name after COUNT"));
+            return Err("Expected array name after COUNT".to_string());
         };
         self.advance();
 
@@ -2532,7 +2529,7 @@ impl Parser {
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for COUNT"));
+            return Err("Expected result variable name for COUNT".to_string());
         };
         self.advance();
 
@@ -2548,28 +2545,28 @@ impl Parser {
         let text = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected target string after REPLACE"));
+            return Err("Expected target string after REPLACE".to_string());
         };
         self.advance();
 
         let pattern = if let Token::StringLiteral(p) = &self.current_token {
             p.clone()
         } else {
-            return Err(format!("Expected pattern string for REPLACE"));
+            return Err("Expected pattern string for REPLACE".to_string());
         };
         self.advance();
 
         let replacement = if let Token::StringLiteral(r) = &self.current_token {
             r.clone()
         } else {
-            return Err(format!("Expected replacement string for REPLACE"));
+            return Err("Expected replacement string for REPLACE".to_string());
         };
         self.advance();
 
         let result_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result variable name for REPLACE"));
+            return Err("Expected result variable name for REPLACE".to_string());
         };
         self.advance();
 
@@ -2586,21 +2583,21 @@ impl Parser {
         let text = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected string variable after SPLIT"));
+            return Err("Expected string variable after SPLIT".to_string());
         };
         self.advance();
 
         let delimiter = if let Token::StringLiteral(d) = &self.current_token {
             d.clone()
         } else {
-            return Err(format!("Expected delimiter string for SPLIT"));
+            return Err("Expected delimiter string for SPLIT".to_string());
         };
         self.advance();
 
         let result_array = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            return Err(format!("Expected result array name for SPLIT"));
+            return Err("Expected result array name for SPLIT".to_string());
         };
         self.advance();
 

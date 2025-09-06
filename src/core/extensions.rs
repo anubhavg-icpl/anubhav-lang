@@ -12,7 +12,7 @@ impl Interpreter {
         match statement {
             Statement::DictCreate { name } => {
                 self.dicts.insert(name.clone(), HashMap::new());
-                println!("Dictionary '{}' created", name);
+                println!("Dictionary '{name}' created");
                 Ok(())
             }
             Statement::DictPut {
@@ -23,9 +23,9 @@ impl Interpreter {
                 let val = self.evaluate_expression(&value)?;
                 if let Some(dict) = self.dicts.get_mut(&dict_name) {
                     dict.insert(key.clone(), val);
-                    println!("Set {}['{}'] = {}", dict_name, key, val);
+                    println!("Set {dict_name}['{key}'] = {val}");
                 } else {
-                    return Err(format!("Dictionary '{}' not found", dict_name));
+                    return Err(format!("Dictionary '{dict_name}' not found"));
                 }
                 Ok(())
             }
@@ -37,15 +37,14 @@ impl Interpreter {
                 if let Some(dict) = self.dicts.get(&dict_name) {
                     if let Some(&value) = dict.get(&key) {
                         self.variables.insert(result_name.clone(), value);
-                        println!("Fetched {}['{}'] = {}", dict_name, key, value);
+                        println!("Fetched {dict_name}['{key}'] = {value}");
                     } else {
                         return Err(format!(
-                            "Key '{}' not found in dictionary '{}'",
-                            key, dict_name
+                            "Key '{key}' not found in dictionary '{dict_name}'"
                         ));
                     }
                 } else {
-                    return Err(format!("Dictionary '{}' not found", dict_name));
+                    return Err(format!("Dictionary '{dict_name}' not found"));
                 }
                 Ok(())
             }
@@ -58,7 +57,7 @@ impl Interpreter {
                         self.intents.insert(result_name.clone(), content.clone());
                         println!("Read {} bytes from '{}'", content.len(), filename);
                     }
-                    Err(e) => return Err(format!("Failed to read file '{}': {}", filename, e)),
+                    Err(e) => return Err(format!("Failed to read file '{filename}': {e}")),
                 }
                 Ok(())
             }
@@ -76,13 +75,13 @@ impl Interpreter {
 
                 match fs::write(&filename, actual_content.as_bytes()) {
                     Ok(_) => println!("Wrote {} bytes to '{}'", actual_content.len(), filename),
-                    Err(e) => return Err(format!("Failed to write to file '{}': {}", filename, e)),
+                    Err(e) => return Err(format!("Failed to write to file '{filename}': {e}")),
                 }
                 Ok(())
             }
             Statement::Sleep { milliseconds } => {
                 let ms = self.evaluate_expression(&milliseconds)? as u64;
-                println!("Sleeping for {} ms...", ms);
+                println!("Sleeping for {ms} ms...");
                 thread::sleep(Duration::from_millis(ms));
                 Ok(())
             }
@@ -90,13 +89,13 @@ impl Interpreter {
                 prompt,
                 result_name,
             } => {
-                print!("{}", prompt);
+                print!("{prompt}");
                 io::stdout().flush().unwrap();
 
                 let mut input = String::new();
                 io::stdin()
                     .read_line(&mut input)
-                    .map_err(|e| format!("Failed to read input: {}", e))?;
+                    .map_err(|e| format!("Failed to read input: {e}"))?;
 
                 let trimmed = input.trim().to_string();
 
@@ -109,7 +108,7 @@ impl Interpreter {
 
                 Ok(())
             }
-            _ => Err(format!("Extension statement not implemented")),
+            _ => Err("Extension statement not implemented".to_string()),
         }
     }
 }

@@ -13,7 +13,7 @@ pub fn run() {
 
     let filename = &args[1];
     let content =
-        fs::read_to_string(filename).expect(&format!("Failed to read file: {}", filename));
+        fs::read_to_string(filename).unwrap_or_else(|_| panic!("Failed to read file: {filename}"));
 
     let lexer = Lexer::new(content);
     let mut parser = Parser::new(lexer);
@@ -22,12 +22,12 @@ pub fn run() {
         Ok(statements) => {
             let mut interpreter = Interpreter::new();
             if let Err(e) = interpreter.execute(statements) {
-                eprintln!("Runtime error: {}", e);
+                eprintln!("Runtime error: {e}");
                 std::process::exit(1);
             }
         }
         Err(e) => {
-            eprintln!("Parse error: {}", e);
+            eprintln!("Parse error: {e}");
             std::process::exit(1);
         }
     }
